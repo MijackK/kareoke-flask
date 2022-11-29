@@ -1,10 +1,16 @@
 from flask import Blueprint
+from authentication.models import User
+from app import db
 
-authentication = Blueprint("/auth", __name__)
+
+
+authentication = Blueprint("/auth", __name__, url_prefix='/auth')
 
 @authentication.route("/login")
 def login():
-    return "login"
+    user = User.query.get(1)
+
+    return f"user name is {user.username} & email is {user.email}"
 
 @authentication.route("/logout")
 def logout():
