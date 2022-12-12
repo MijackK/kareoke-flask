@@ -15,6 +15,7 @@ def create_app():
 
     #connect to database
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
+    app.secret_key="secret"
     db.init_app(app)
 
  
@@ -29,8 +30,7 @@ def create_app():
 
     @app.route("/init")
     def hello_init():
-        from initilize import create_all
-        create_all(db)
+        db.create_all()
         return "initialized"
     
     return app
