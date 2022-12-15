@@ -49,6 +49,14 @@ class EmailVerification(db.Model):
     def __init__(self, token, email):
         self.token = token
         self.email = email
-    
+
+    def is_valid(self):
+        current_time = datetime.now()
+        delta = current_time - self.date_created
+        hours = delta.total_seconds()/3600
+        # change it so we get the hours limit from the config
+        if hours < 24 and not self.used:
+            return True
+        return False
 
 

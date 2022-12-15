@@ -1,9 +1,13 @@
 from flask import Blueprint, jsonify, session, request
-from authentication.models import User,PasswordReset
+from authentication.models import User,PasswordReset,EmailVerification
 from app import db
 from werkzeug.security import check_password_hash, generate_password_hash
 from authentication.decorator import  login_required
-from authentication.utility.passwordreset import generate_reset_token
+from authentication.utility.generate_token import (
+    generate_reset_token, 
+    generate_verify_token, 
+    verify_token
+)
 
 
 
@@ -44,7 +48,7 @@ def logout():
 @authentication.route("/register", methods=['POST'])
 def create_account():
 
-    #add some validation here for password and email
+    #add some validation here for password and email?
     check_exists = User.query.filter(User.email == request.form["email"]).first()
  
     if check_exists:
@@ -55,39 +59,51 @@ def create_account():
         password =  generate_password_hash(request.form["password"])
     )
     db.session.add(new_user)
+    #send verify link to email
+    generate_verify_token(request.form["email"])
     db.session.commit()
-    #generate token for verifying email here
     return "create"
 
-@authentication.route("/verify")
-def verify():
+@authentication.route("/generate_verify_url", methods=['POST'])
+def generate_verify():
+    generate_verify_token(request.form["email"])
+    return "verification link sent to email"
 
-    return "verify"
 
-@authentication.route("/generate_reset_token", methods=['POST'])
+
+@authentication.route("/verify_email", methods=['POST'])
+def verify_email():
+    post_data = request.get_json()
+
+    response = verify_token(value = post_data['token'], table = EmailVerification)
+
+    if response["success"]:
+        user = User.query.filter(User.email == response["email"]).first()
+        user.verify = True
+        db.session.add(user)
+        db.session.commit()
+        return "Email Verified"
+
+    return "verification link has expired"
+
+@authentication.route("/generate_reset_url", methods=['POST'])
 def new_reset_token():
     generate_reset_token(request.form["email"])
-    return "Reset url has been sent to your email"
+    return "Password Reset url has been sent to your email"
 
 @authentication.route("/recover_password", methods=['POST'])
 def password_recovery():
-    token = (
-        PasswordReset.query
-        .filter(PasswordReset.token == request.form["token"] )
-        .order_by(PasswordReset.date_created.desc())
-        .first()
-    )
-    if token == None:
-        return "Token has expired"
-    if token.is_valid():
-        token.used = True
-        db.session.add(token)
-        user = User.query.filter(User.email == token.email).first()
+   
+    response = verify_token(value = request.form["token"], table = PasswordReset)
+
+    if response["success"]:
+        user = User.query.filter(User.email == response["email"]).first()
         user.password = generate_password_hash(request.form["password"])
         db.session.add(user)
         db.session.commit()
-        return "password changed succesfully"
-    return "Token has expired"
+        return "password changed succesfully" 
+
+    return "password reset link has expired"
 
 
 @authentication.route("/edit", methods=['GET','POST'])
