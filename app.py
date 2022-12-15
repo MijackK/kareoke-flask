@@ -30,6 +30,7 @@ def create_app():
 
     @app.route("/init")
     def hello_init():
+        db.drop_all()
         db.create_all()
         return "initialized"
     
