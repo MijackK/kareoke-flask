@@ -1,4 +1,4 @@
-from flask import session
+from flask import session, request
 from app import db
 from authentication.models import User
 from functools import wraps
@@ -6,9 +6,11 @@ from functools import wraps
 def login_required(callback):
     @wraps(callback)
     def decorated_function(**kwargs):
-        print(kwargs)
         if "user_id" in session:
-            return callback(**kwargs)
+            csrf_token = request.headers.get("CSRF_TOKEN")
+            if csrf_token == session['csrf_token']:
+                return callback(**kwargs)
+            return "Cross site attack prevented"
         return "Not allowed, please login"
     return decorated_function
 

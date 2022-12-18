@@ -16,6 +16,7 @@ authentication = Blueprint("/auth", __name__, url_prefix='/auth')
 
 @authentication.route("/login", methods=['POST'] )
 def login():
+  
 
     user = User.query.filter(User.email == request.form['email']).first()
     my_id = None
@@ -28,10 +29,13 @@ def login():
     if check_password_hash(user.password,request.form['password']):
         session.clear()
         session['user_id'] = user.id
+        #generate cryptographic random string
+        session['csrf_token'] = "secret"
         info = {
             "userName":user.username,
             "email":user.email,
-            "verified":user.verify
+            "verified":user.verify,
+            "csfrToken": session['csrf_token']
         }
         return jsonify(info)
     else:
@@ -41,9 +45,10 @@ def login():
     return f"user name is {user.username} & email is {user.email}"
 
 @authentication.route("/logout", methods=['POST'])
+@login_required
 def logout():
-    session.clear()
-    return "succesfully logged out"
+        session.clear()
+        return "succesfully logged out"
 
 @authentication.route("/register", methods=['POST'])
 def create_account():

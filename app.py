@@ -10,7 +10,6 @@ from flask_cors import CORS
 db = SQLAlchemy()
 
 def create_app():
-    
     # create and configure the app
     app = Flask(__name__)
     CORS(
@@ -18,15 +17,10 @@ def create_app():
         resources={r"/*": {"origins": "http://localhost:8080"}},
         supports_credentials=True
     )
-
-
     #connect to database
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
     app.secret_key="secret"
     db.init_app(app)
-
- 
-
 
     from authentication.routes import authentication
 
