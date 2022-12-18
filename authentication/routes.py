@@ -16,7 +16,7 @@ authentication = Blueprint("/auth", __name__, url_prefix='/auth')
 
 @authentication.route("/login", methods=['POST'] )
 def login():
- 
+
     user = User.query.filter(User.email == request.form['email']).first()
     my_id = None
     if "user_id" in session:
@@ -40,7 +40,7 @@ def login():
 
     return f"user name is {user.username} & email is {user.email}"
 
-@authentication.route("/logout")
+@authentication.route("/logout", methods=['POST'])
 def logout():
     session.clear()
     return "succesfully logged out"
