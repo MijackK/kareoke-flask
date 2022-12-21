@@ -1,4 +1,5 @@
 import secrets
+import string
 from app import db
 from authentication.models import PasswordReset, EmailVerification
 
@@ -38,3 +39,7 @@ def verify_token(value, table):
         response['email'] = token.email
 
     return response
+
+def generate_csrf_token(length):
+    return secrets.token_urlsafe(length)
+

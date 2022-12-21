@@ -1,12 +1,16 @@
 from flask import Blueprint, jsonify, session, request
 from authentication.models import User,PasswordReset,EmailVerification
 from app import db
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import (
+    check_password_hash, 
+    generate_password_hash 
+)
 from authentication.decorator import  login_required
 from authentication.utility.generate_token import (
     generate_reset_token, 
     generate_verify_token, 
-    verify_token
+    verify_token,
+    generate_csrf_token,
 )
 
 
@@ -29,13 +33,12 @@ def login():
     if check_password_hash(user.password,request.form['password']):
         session.clear()
         session['user_id'] = user.id
-        #generate cryptographic random string
-        session['csrf_token'] = "secret"
+        session['csrf_token'] = generate_csrf_token(32)
         info = {
             "userName":user.username,
             "email":user.email,
             "verified":user.verify,
-            "csfrToken": session['csrf_token']
+            "csrfToken": session['csrf_token']
         }
         return jsonify(info)
     else:
