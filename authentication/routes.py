@@ -12,7 +12,7 @@ from authentication.utility.generate_token import (
     verify_token,
     generate_csrf_token,
 )
-
+from authentication.utility.email import send_mail
 
 
 authentication = Blueprint("/auth", __name__, url_prefix='/auth')
@@ -118,3 +118,8 @@ def password_recovery():
 @login_required
 def info_edit():
     return "you are logged in"
+
+@authentication.route("/mail", methods=['POST'])
+def send_emailt():
+    send_mail(recipient="", message="")
+    return "success"
