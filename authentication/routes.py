@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, session, request
+from flask import Blueprint, jsonify, session, request,render_template
 from authentication.models import User,PasswordReset,EmailVerification
 from app import db
 from werkzeug.security import (
@@ -118,8 +118,3 @@ def password_recovery():
 @login_required
 def info_edit():
     return "you are logged in"
-
-@authentication.route("/mail", methods=['POST'])
-def send_emailt():
-    send_mail(recipient="", message="")
-    return "success"
