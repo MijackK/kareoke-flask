@@ -1,11 +1,8 @@
 import secrets
 import string
+import os
 from app import db
 from authentication.models import PasswordReset, EmailVerification
-from authentication.utility.email import (
-    account_verification_email,
-    password_recovery_email
-)
 
 #for password reset
 def generate_reset_token(email):
@@ -15,7 +12,7 @@ def generate_reset_token(email):
     db.session.commit()
     # send recover url to email?
     
-    print(url_token)
+    print(f"{os.environ['DOMAIN']}/auth/password_reset?token={url_token}")
 
 #for email verification
 def generate_verify_token(email):
@@ -25,7 +22,7 @@ def generate_verify_token(email):
     db.session.add(EmailVerification(token = url_token, email = email))
     db.session.commit()
     # send verify url to email?
-    print(url_token)
+    print(f"{os.environ['DOMAIN']}/auth/email_verify?token={url_token}")
 
 def verify_token(value, table):
     token = (
