@@ -20,9 +20,8 @@ authentication = Blueprint("/auth", __name__, url_prefix='/auth')
 
 @authentication.route("/login", methods=['POST'] )
 def login():
-  
-
-    user = User.query.filter(User.email == request.form['email']).first()
+    post_data = request.get_json()
+    user = User.query.filter(User.email == post_data['email']).first()
     my_id = None
     if "user_id" in session:
         my_id = session['user_id']
@@ -30,7 +29,7 @@ def login():
     if user == None:
         return "password or email is incorrect"
 
-    if check_password_hash(user.password,request.form['password']):
+    if check_password_hash(user.password,post_data['password']):
         session.clear()
         session['user_id'] = user.id
         session['csrf_token'] = generate_csrf_token(32)
