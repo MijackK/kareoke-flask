@@ -1,4 +1,4 @@
-from flask import session, request
+from flask import session, request, abort
 from app import db
 from authentication.models import User
 from functools import wraps
@@ -10,8 +10,10 @@ def login_required(callback):
             csrf_token = request.headers.get("CSRF_TOKEN")
             if csrf_token == session['csrf_token']:
                 return callback(**kwargs)
-            return "Cross site attack prevented"
-        return "Not allowed, please login"
+            print("Cross site attack prevented")
+            abort(401)
+        print("Not allowed, please login")
+        abort(401)
     return decorated_function
 
 def require_admin(callback):
@@ -21,7 +23,8 @@ def require_admin(callback):
             is_admin = User.query.get(session['user_id']).admin
             if(is_admin):
                 return callback(**kwargs)
-        return "Only administrator is allowed"
+        print("Only administrator is allowed")
+        abort(403)
     return decorated_function
             
 def require_verify(callback):
@@ -31,12 +34,8 @@ def require_verify(callback):
             is_verified = User.query.get(session['user_id']).verify
             if(is_verified):
                 return callback(**kwargs)
-        return "Please verify your email first"
+        print("Please verify your email first")
+        abort(403)
     return decorated_function
 
-def session_expiry(callback):
-    @wraps(callback)
-    def decorated_function(**kwargs):
-        print("session expiry check")
-        return callback(**kwargs)
-    return decorated_function
+
