@@ -5,6 +5,7 @@ from flask_cors import CORS
 from flask_mail import Mail
 
 
+
 db = SQLAlchemy()
 mail = Mail()
 
@@ -33,8 +34,19 @@ def create_app():
 
     @app.route("/init")
     def hello_init():
+        from authentication.models import User
+        from werkzeug.security import ( generate_password_hash)
         db.drop_all()
         db.create_all()
+        admin = User(
+            username="admin", 
+            email="admin@gmail.com", 
+            password=generate_password_hash("admin")
+        )
+        admin.admin = True
+        admin.verify = True
+        db.session.add(admin)
+        db.session.commit()
         return "initialized"
     
     return app
