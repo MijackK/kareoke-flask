@@ -26,8 +26,10 @@ def create_app():
     
 
     from authentication.routes import authentication
+    from kareoke.routes import kareoke
 
     app.register_blueprint(authentication)
+    app.register_blueprint(kareoke)
     @app.route("/")
     def hello_world():
         return "<p style='color:green'>Hello, World! 3ep</p>"

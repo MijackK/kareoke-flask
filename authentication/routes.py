@@ -22,12 +22,13 @@ authentication = Blueprint("/auth", __name__, url_prefix='/auth')
 def login():
     post_data = request.get_json()
     user = User.query.filter(User.email == post_data['email']).first()
-    my_id = None
-    if "user_id" in session:
-        my_id = session['user_id']
-   
+    error_message = {
+        "message":"password or email is incorrect",
+        "success":False
+    }
+  
     if user == None:
-        return "password or email is incorrect"
+        return error_message 
 
     if check_password_hash(user.password,post_data['password']):
         session.clear()
@@ -37,14 +38,15 @@ def login():
             "userName":user.username,
             "email":user.email,
             "verified":user.verify,
-            "csrfToken": session['csrf_token']
+            "csrfToken": session['csrf_token'],
+            "success":True
         }
         return jsonify(info)
     else:
-        return "password or email is incorrect"
+        return error_message 
 
 
-    return f"user name is {user.username} & email is {user.email}"
+  
 
 @authentication.route("/logout", methods=['POST'])
 @login_required
@@ -54,34 +56,42 @@ def logout():
 
 @authentication.route("/register", methods=['POST'])
 def create_account():
+    post_data = request.get_json()
+    error_message = {
+        "message":"Could not create account, email already in system",
+        "success":False
+    }
 
     #add some validation here for password and email?
-    check_exists = User.query.filter(User.email == request.form["email"]).first()
+    check_exists = User.query.filter(User.email == post_data["email"]).first()
  
     if check_exists:
-        return "Could not create account, email already in system"
+        return error_message
     new_user = User(
-        username = request.form["userName"], 
-        email = request.form["email"], 
-        password =  generate_password_hash(request.form["password"])
+        username = post_data["userName"], 
+        email = post_data["email"], 
+        password =  generate_password_hash(post_data["password"])
     )
     db.session.add(new_user)
     #send verify link to email
-    generate_verify_token(request.form["email"])
+    generate_verify_token(post_data["email"])
     db.session.commit()
-    return "create"
+    return {
+        "message":"account created succesfully",
+        "success":True
+    }
 
 @authentication.route("/generate_verify_url", methods=['POST'])
 def generate_verify():
-    generate_verify_token(request.form["email"])
+    post_data = request.get_json()
+    generate_verify_token(post_data["email"])
     return "verification link sent to email"
 
 
 
 @authentication.route("/verify_email", methods=['POST'])
 def verify_email():
-    post_data = request.get_json()
-
+  
     response = verify_token(value = post_data['token'], table = EmailVerification)
 
     if response["success"]:
@@ -113,7 +123,17 @@ def password_recovery():
     return "password reset link has expired"
 
 
-@authentication.route("/edit", methods=['GET','POST'])
+@authentication.route("/check", methods=['GET','POST'])
 @login_required
-def info_edit():
-    return "you are logged in"
+def check():
+    info = User.query.get(session['user_id'])
+
+    return {
+        "userName":info.username,
+        "email":info.email,
+        "verified":info.verify,
+        "admin":info.admin,
+        "csrfToken": session['csrf_token'],
+    }
+    
+
