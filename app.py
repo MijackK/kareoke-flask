@@ -34,12 +34,14 @@ def create_app():
     def hello_world():
         return "<p style='color:green'>Hello, World! 3ep</p>"
 
-    @app.route("/init")
+    @app.route("/init", methods=["POST"])
     def hello_init():
         from authentication.models import User
+        from kareoke.models import Bucket,Media
         from werkzeug.security import ( generate_password_hash)
         db.drop_all()
         db.create_all()
+        #make admin account
         admin = User(
             username="admin", 
             email="admin@gmail.com", 
@@ -48,6 +50,20 @@ def create_app():
         admin.admin = True
         admin.verify = True
         db.session.add(admin)
+        # create bucket
+        db.session.add(Bucket("kareoke"))
+        #create media
+        db.session.add(Media(
+            name="judgment.mp4", 
+            bucket ="kareoke", 
+            isBackground=True)
+        )
+        db.session.add(Media(
+            name="judgment.mp3", 
+            bucket ="kareoke", 
+            isBackground=False)
+        )
+
         db.session.commit()
         return "initialized"
     
