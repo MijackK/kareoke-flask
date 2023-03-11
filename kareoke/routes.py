@@ -47,7 +47,7 @@ def create_song():
 @kareoke.route("/add_map", methods=['PUT'] )
 def create_map():
     background = request.files['background']
-    songID = Media.query.get(1).id
+    song_id = Media.query.get(1).id
 
     result = upload_files([background])
     #save the background to database
@@ -63,13 +63,27 @@ def create_map():
 
     db.session.add(BeatMap(
         name = request.form['name'], 
-        audio = songID, 
+        audio = song_id, 
         background = new_background.id,
         song_map = ""
     ))
     db.session.commit()
 
     return result['message']
+
+@kareoke.route("/get_maps", methods=["GET"])
+def get_maps():
+    #add pagination later
+    get_maps = BeatMap.query.all()
+    response = []
+    for beat_map in get_maps:
+        response.append(
+            {
+                "name":beat_map.name,
+                "id":beat_map.id
+            }
+        )
+    return response
 
 
 

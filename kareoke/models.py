@@ -6,7 +6,7 @@ class BeatMap(db.Model):
     background = db.Column(db.String, db.ForeignKey("media.id"))
     audio = db.Column(db.String, db.ForeignKey("media.id"))
     songMap = db.Column(db.String)
-    User = db.Column(db.Integer,db.ForeignKey("user.id"))
+    user = db.Column(db.Integer,db.ForeignKey("user.id"))
  
 
     def __init__(self, name, audio, background, song_map):
