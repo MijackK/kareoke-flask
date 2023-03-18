@@ -52,18 +52,7 @@ def create_app():
         db.session.add(admin)
         # create bucket
         db.session.add(Bucket("kareoke"))
-        #create media
-        db.session.add(Media(
-            name="judgment.mp4", 
-            bucket ="kareoke", 
-            isBackground=True)
-        )
-        db.session.add(Media(
-            name="judgment.mp3", 
-            bucket ="kareoke", 
-            isBackground=False)
-        )
-
+        #commit changes
         db.session.commit()
         return "initialized"
     
