@@ -31,7 +31,7 @@ def upload_files(files):
             bucket_name = "kareoke", 
             object_name = f"{filename}.{extension}", 
             data = media, 
-            length = media.content_length,
+            length = size,
             content_type = media.content_type
         )
 
