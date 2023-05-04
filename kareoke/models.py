@@ -1,36 +1,44 @@
 from app import db
+from datetime import datetime
+from sqlalchemy import func
 
 class BeatMap(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    background = db.Column(db.String, db.ForeignKey("media.id"))
-    audio = db.Column(db.String, db.ForeignKey("media.id"))
-    songMap = db.Column(db.String)
-    user = db.Column(db.Integer,db.ForeignKey("user.id"))
- 
+    beatMap = db.Column(db.String)
+    user = db.Column(db.Integer, db.ForeignKey("user.id"))
+    date_created = db.Column(db.DateTime, default=datetime.now())
+    date_updated = db.Column(db.DateTime,default=datetime.now(), onupdate=func.now())
 
-    def __init__(self, name, audio, background, song_map):
+    def __init__(self, name, beatMap, user):
         self.name = name
-        self.audio = audio
-        self.background = background
-        self.songMap = song_map 
-        self.user = 1
+        self.beatMap = beatMap
+        self.user = user
 
-class Media(db.Model):
-    id = db.Column(db.Integer,primary_key = True)
+
+class Background(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    bucket = db.Column(db.String, db.ForeignKey("bucket.id"))
-    isBackground = db.Column(db.Boolean)
+    objectID = db.Column(db.String)
+    size = db.Column(db.Float)
+    beatMap = db.Column(db.Integer, db.ForeignKey("beat_map.id"))
 
-    def __init__(self, name, bucket, isBackground):
+    def __init__(self, name, beatMap, objectID, size):
         self.name = name
-        self.bucket = bucket
-        self.isBackground = isBackground
+        self.beatMap = beatMap
+        self.objectID = objectID
+        self.size = size
 
-class Bucket(db.Model):
-    id =  db.Column(db.Integer,primary_key = True)
+
+class Audio(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
+    beatMap = db.Column(db.Integer, db.ForeignKey("beat_map.id"))
+    objectID = db.Column(db.String)
+    size = db.Column(db.Float)
 
-    def __init__(self, name):
+    def __init__(self, name, beatMap, objectID, size):
         self.name = name
-    
+        self.beatMap = beatMap
+        self.objectID = objectID
+        self.size = size

@@ -1,13 +1,12 @@
-import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_mail import Mail
 
 
-
 db = SQLAlchemy()
 mail = Mail()
+
 
 def create_app():
     # create and configure the app
@@ -15,21 +14,20 @@ def create_app():
     CORS(
         app,
         resources={r"/*": {"origins": "http://localhost:8080"}},
-        supports_credentials=True
+        supports_credentials=True,
     )
     app.config.from_object("config.Config")
 
-
-    #connect to database
+    # connect to database
     db.init_app(app)
     mail.init_app(app)
-    
 
     from authentication.routes import authentication
     from kareoke.routes import kareoke
 
     app.register_blueprint(authentication)
     app.register_blueprint(kareoke)
+
     @app.route("/")
     def hello_world():
         return "<p style='color:green'>Hello, World! 3ep</p>"
@@ -37,28 +35,21 @@ def create_app():
     @app.route("/init", methods=["POST"])
     def hello_init():
         from authentication.models import User
-        from kareoke.models import Bucket,Media
-        from werkzeug.security import ( generate_password_hash)
+        from werkzeug.security import generate_password_hash
+
         db.drop_all()
         db.create_all()
-        #make admin account
+        # make admin account
         admin = User(
-            username="admin", 
-            email="admin@gmail.com", 
-            password=generate_password_hash("admin")
+            username="admin",
+            email="admin@gmail.com",
+            password=generate_password_hash("admin"),
         )
         admin.admin = True
         admin.verify = True
         db.session.add(admin)
-        # create bucket
-        db.session.add(Bucket("kareoke"))
-        #commit changes
+        # commit changes
         db.session.commit()
         return "initialized"
-    
+
     return app
-
-
-
-
-
