@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "StartMinIO",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": ["powershell.exe -File", "${workspaceFolder}/startminio.ps1"],
+      "isBackground": true
+    }
+  ]
+}
