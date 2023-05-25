@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, session, request, render_template
+from flask import Blueprint, jsonify, session, request
 from authentication.models import User, PasswordReset, EmailVerification
 from app import db
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -9,10 +9,9 @@ from authentication.utility.generate_token import (
     verify_token,
     generate_csrf_token,
 )
-from authentication.utility.email import send_mail
 
 
-authentication = Blueprint("/auth", __name__, url_prefix="/auth")
+authentication = Blueprint("auth", __name__, url_prefix="/auth")
 
 
 @authentication.route("/login", methods=["POST"])
@@ -21,7 +20,7 @@ def login():
     user = User.query.filter(User.email == post_data["email"]).first()
     error_message = {"message": "password or email is incorrect", "success": False}
 
-    if user == None:
+    if user is None:
         return error_message
 
     if check_password_hash(user.password, post_data["password"]):
