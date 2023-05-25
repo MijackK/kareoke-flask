@@ -6,10 +6,10 @@ import traceback
 from app import db
 
 
-kareoke = Blueprint("/kareoke", __name__, url_prefix="/kareoke")
+kareoke = Blueprint("kareoke", __name__, url_prefix="/kareoke")
 
 
-@kareoke.route("/add_map", methods=["PUT"])
+@kareoke.route("/add_map", methods=["POST"])
 def create_map():
     # add user need to be verified decorator here
     background = request.files["background"]
@@ -134,6 +134,28 @@ def get_user_maps():
     return response
 
 
-@kareoke.route("/save_map", methods=["POST"])
+@kareoke.route("/save_map", methods=["PUT"])
 def save_map():
-    return "map saved"
+    post_data = request.get_json()
+    beat_map = (
+        BeatMap.query.filter(BeatMap.id == post_data["id"])
+        .filter(BeatMap.user == session["user_id"])
+        .first()
+    )
+    if beat_map is None:
+        abort(404)
+    setattr(beat_map, post_data["column"], post_data["value"])
+
+    db.session.add(beat_map)
+    db.session.commit()
+    return "beatMap updated"
+
+
+@kareoke.route("/change_audio", methods=["PUT"])
+def change_audio():
+    return "audio changed"
+
+
+@kareoke.route("/change_background", methods=["PUT"])
+def change_background():
+    return "background changed"
