@@ -28,28 +28,12 @@ def create_app():
     app.register_blueprint(authentication)
     app.register_blueprint(kareoke)
 
-    @app.route("/")
-    def hello_world():
-        return "<p style='color:green'>Hello, World! 3ep</p>"
-
     @app.route("/init", methods=["POST"])
     def hello_init():
-        from authentication.models import User
-        from werkzeug.security import generate_password_hash
+        from initilize import create_all
 
-        db.drop_all()
-        db.create_all()
-        # make admin account
-        admin = User(
-            username="admin",
-            email="admin@gmail.com",
-            password=generate_password_hash("admin"),
-        )
-        admin.admin = True
-        admin.verify = True
-        db.session.add(admin)
-        # commit changes
-        db.session.commit()
+        create_all(db)
+
         return "initialized"
 
     return app
