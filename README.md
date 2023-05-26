@@ -1,2 +1,18 @@
 <h3> Kareoke Web Back End </h3>
 <span> Created by Mijack Kuol </span>
+
+enviroment varaibles
+
+```
+SECRET_KEY=
+DRIVER_NAME=
+DB_NAME=
+DB_USERNAME=
+DB_PASSWORD=
+DB_HOST=
+MAIL_SERVER=
+MAIL_USERNAME=
+MAIL_PASSWORD=
+OBJECT_SERVER_USERNAME=
+OBJECT_SERVER_PASSWORD=
+```
