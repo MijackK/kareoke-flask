@@ -2,6 +2,7 @@ from flask import Blueprint, request, session, abort
 from kareoke.utility.kareoke_upload import upload_files
 from kareoke.models import BeatMap, Audio, Background
 import traceback
+import json
 
 from app import db
 
@@ -137,6 +138,10 @@ def get_user_maps():
 @kareoke.route("/save_map", methods=["PUT"])
 def save_map():
     post_data = request.get_json()
+    value = post_data["value"]
+    if type(value) is list:
+        value = json.dumps(value)
+
     beat_map = (
         BeatMap.query.filter(BeatMap.id == post_data["id"])
         .filter(BeatMap.user == session["user_id"])
@@ -144,11 +149,12 @@ def save_map():
     )
     if beat_map is None:
         abort(404)
-    setattr(beat_map, post_data["column"], post_data["value"])
+
+    setattr(beat_map, post_data["column"], value)
 
     db.session.add(beat_map)
     db.session.commit()
-    return "beatMap updated"
+    return f"beatMap '{beat_map.name}' updated"
 
 
 @kareoke.route("/change_audio", methods=["PUT"])
