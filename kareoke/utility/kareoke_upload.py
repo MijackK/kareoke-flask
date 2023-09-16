@@ -52,3 +52,15 @@ def upload_files(files):
         "message": f"{files_added}/{len(files)} sucessfully stored",
         "objects": new_objects,
     }
+
+
+def delete_files(remove_files):
+    client = Minio(
+        "localhost:9000",
+        secure=False,
+        access_key=os.environ["OBJECT_SERVER_USERNAME"],
+        secret_key=os.environ["OBJECT_SERVER_PASSWORD"],
+    )
+    for file in remove_files:
+        client.remove_object(bucket_name=os.environ["UPLOAD_BUCKET"], object_name=file)
+        print(f"{file} succesfully removed")

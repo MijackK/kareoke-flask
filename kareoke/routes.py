@@ -1,5 +1,5 @@
 from flask import Blueprint, request, session, abort
-from kareoke.utility.kareoke_upload import upload_files
+from kareoke.utility.kareoke_upload import upload_files, delete_files
 from kareoke.models import BeatMap, Audio, Background
 import traceback
 import json
@@ -137,8 +137,13 @@ def get_user_maps():
 
 @kareoke.route("/save_map", methods=["PUT"])
 def save_map():
+    editable_columns = []
     post_data = request.get_json()
     value = post_data["value"]
+
+    if post_data["column"] not in editable_columns:
+        abort(500)
+
     if type(value) is list:
         value = json.dumps(value)
 
@@ -165,3 +170,25 @@ def change_audio():
 @kareoke.route("/change_background", methods=["PUT"])
 def change_background():
     return "background changed"
+
+
+@kareoke.route("/delete_map", methods=["DELETE"])
+def delete_map():
+    post_data = request.get_json()
+
+    # get the beat map
+    target = (
+        db.session.query(BeatMap, Audio, Background)
+        .select_from(BeatMap)
+        .filter(BeatMap.user == session["user_id"])
+        .filter(BeatMap.id == post_data["id"])
+        .first()
+    )
+
+    if target is None:
+        abort(404)
+    db.session.delete(target.BeatMap)
+    delete_files(remove_files=[target.Audio.objectID, target.Background.objectID])
+    db.session.commit()
+
+    return "map deleted"
