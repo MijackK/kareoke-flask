@@ -137,7 +137,7 @@ def get_user_maps():
 
 @kareoke.route("/save_map", methods=["PUT"])
 def save_map():
-    editable_columns = []
+    editable_columns = ["name", "beatMap"]
     post_data = request.get_json()
     value = post_data["value"]
 

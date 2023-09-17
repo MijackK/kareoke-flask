@@ -1,5 +1,6 @@
 import os
 from sqlalchemy.engine.url import URL
+from datetime import timedelta
 
 
 class Config:
@@ -12,7 +13,7 @@ class Config:
         database=os.environ["DB_NAME"],
     )
     # expiry dates
-    SESSION_EXPIRY = "1,day"
+    PERMANENT_SESSION_LIFETIME = timedelta(days=1)
     EMAIL_VERIFICATION_TOKEN_EXPIRY = "30,day"
     PASSWORD_RESET_TOKEN_EXPIRY = "1,day"
     # email
@@ -22,6 +23,7 @@ class Config:
     MAIL_USERNAME = os.environ["MAIL_USERNAME"]
     MAIL_PASSWORD = os.environ["MAIL_PASSWORD"]
     MAIL_DEFAULT_SENDER = os.environ["MAIL_USERNAME"]
+
     # rate limiting
 
 

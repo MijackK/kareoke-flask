@@ -25,6 +25,7 @@ def login():
 
     if check_password_hash(user.password, post_data["password"]):
         session.clear()
+        session.permanent = True
         session["user_id"] = user.id
         session["csrf_token"] = generate_csrf_token(32)
         info = {
