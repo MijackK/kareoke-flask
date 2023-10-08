@@ -1,8 +1,10 @@
 from flask import Blueprint, request, session, abort
 from kareoke.utility.kareoke_upload import upload_files, delete_files
-from kareoke.models import BeatMap, Audio, Background
+from kareoke.models import BeatMap, Audio, Background, HighScore
+from authentication.models import User
 import traceback
 import json
+from sqlalchemy import and_
 
 from app import db
 
@@ -83,10 +85,14 @@ def get_map():
     # update this query to use aggregator function to put all the
     # media in an array
     get_map = (
-        db.session.query(BeatMap, Audio, Background)
+        db.session.query(BeatMap, Audio, Background, User, HighScore)
         .select_from(BeatMap)
         .join(Audio)
         .join(Background)
+        .outerjoin(
+            HighScore,
+            and_(HighScore.beatMap == BeatMap.id, HighScore.user == session["user_id"]),
+        )
         .filter(BeatMap.id == map_id)
         .first()
     )
@@ -103,6 +109,8 @@ def get_map():
         "audio": f"kareoke/{audio.objectID}",
         "background": f"kareoke/{background.objectID}",
         "dateUpdated": beat_map.date_updated,
+        "author": get_map.User.username,
+        "highscore": get_map.HighScore.score if get_map.HighScore else 0,
     }
 
     return response
@@ -192,3 +200,30 @@ def delete_map():
     db.session.commit()
 
     return "map deleted"
+
+
+@kareoke.route("/highscore", methods=["PUT"])
+def add_highscore():
+    post_data = request.get_json()
+    beat_map_id = post_data["beatMapID"]
+    score = post_data["score"]
+
+    get_highscore = (
+        HighScore.query.filter(HighScore.beatMap == beat_map_id)
+        .filter(HighScore.user == session["user_id"])
+        .first()
+    )
+    # update highscore
+    if get_highscore and get_highscore.score < score:
+        get_highscore.score = score
+        db.session.add(get_highscore)
+
+    # create new highscore
+    if get_highscore is None:
+        db.session.add(
+            HighScore(beatMap=beat_map_id, score=score, user=session["user_id"])
+        )
+
+    db.session.commit()
+
+    return "highscore added"

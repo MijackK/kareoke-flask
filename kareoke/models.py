@@ -53,10 +53,16 @@ class Audio(db.Model):
 
 class HighScore(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
     beatMap = db.Column(db.Integer, db.ForeignKey("beat_map.id"), index=True)
     score = db.Column(db.Integer)
     date_created = db.Column(db.DateTime, default=datetime.now())
     date_updated = db.Column(db.DateTime, default=datetime.now(), onupdate=func.now())
+
+    def __init__(self, beatMap, score, user):
+        self.beatMap = beatMap
+        self.score = score
+        self.user = user
 
 
 class MapEdits(db.Model):
