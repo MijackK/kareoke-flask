@@ -5,7 +5,7 @@ from authentication.models import User
 import traceback
 import json
 from sqlalchemy import and_
-
+from authentication.decorator import login_required
 from app import db
 
 
@@ -55,7 +55,6 @@ def create_map():
         }
 
         return {
-            "success": True,
             "message": f"beatmap {request.form['map-name']} added",
             "map": beatMap,
         }
@@ -91,13 +90,16 @@ def get_map():
         .join(Background)
         .outerjoin(
             HighScore,
-            and_(HighScore.beatMap == BeatMap.id, HighScore.user == session["user_id"]),
+            and_(
+                HighScore.beatMap == BeatMap.id,
+                HighScore.user == session.get("user_id"),
+            ),
         )
         .filter(BeatMap.id == map_id)
         .first()
     )
     if not get_map:
-        abort(404)
+        abort(404, "Map does not exists")
     beat_map = get_map.BeatMap
     audio = get_map.Audio
     background = get_map.Background
@@ -161,7 +163,7 @@ def save_map():
         .first()
     )
     if beat_map is None:
-        abort(404)
+        abort(404, "Could not update Beat Map")
 
     setattr(beat_map, post_data["column"], value)
 
@@ -194,7 +196,7 @@ def delete_map():
     )
 
     if target is None:
-        abort(404)
+        abort(404, "Map does not exist in database")
     db.session.delete(target.BeatMap)
     delete_files(remove_files=[target.Audio.objectID, target.Background.objectID])
     db.session.commit()
@@ -203,6 +205,7 @@ def delete_map():
 
 
 @kareoke.route("/highscore", methods=["PUT"])
+@login_required
 def add_highscore():
     post_data = request.get_json()
     beat_map_id = post_data["beatMapID"]
