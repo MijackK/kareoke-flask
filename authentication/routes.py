@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, session, request
+from flask import Blueprint, jsonify, session, request, abort, render_template
 from authentication.models import User, PasswordReset, EmailVerification
 from app import db
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -18,10 +18,9 @@ authentication = Blueprint("auth", __name__, url_prefix="/auth")
 def login():
     post_data = request.get_json()
     user = User.query.filter(User.email == post_data["email"]).first()
-    error_message = {"message": "password or email is incorrect", "success": False}
 
     if user is None:
-        return error_message
+        abort(401, "password or email is incorrect")
 
     if check_password_hash(user.password, post_data["password"]):
         session.clear()
@@ -33,11 +32,9 @@ def login():
             "email": user.email,
             "verified": user.verify,
             "csrfToken": session["csrf_token"],
-            "success": True,
         }
         return jsonify(info)
-    else:
-        return error_message
+    abort(401, "password or email is incorrect")
 
 
 @authentication.route("/logout", methods=["POST"])
@@ -50,16 +47,12 @@ def logout():
 @authentication.route("/register", methods=["POST"])
 def create_account():
     post_data = request.get_json()
-    error_message = {
-        "message": "Could not create account, email already in system",
-        "success": False,
-    }
 
     # add some validation here for password and email?
     check_exists = User.query.filter(User.email == post_data["email"]).first()
 
     if check_exists:
-        return error_message
+        abort(409, "Account already exists")
     new_user = User(
         username=post_data["userName"],
         email=post_data["email"],
@@ -69,13 +62,16 @@ def create_account():
     # send verify link to email
     generate_verify_token(post_data["email"])
     db.session.commit()
-    return {"message": "account created succesfully", "success": True}
+    return "account created succesfully"
 
 
 @authentication.route("/generate_verify_url", methods=["POST"])
+@login_required
 def generate_verify():
-    post_data = request.get_json()
-    generate_verify_token(post_data["email"])
+    user = User.query.get(session["user_id"])
+    if user.verify:
+        return "already verified"
+    generate_verify_token(user.email)
     return "verification link sent to email"
 
 
@@ -83,16 +79,13 @@ def generate_verify():
 def verify_email():
     post_data = request.get_json()
 
-    response = verify_token(value=post_data["token"], table=EmailVerification)
+    user_email = verify_token(value=post_data["token"], table=EmailVerification)
 
-    if response["success"]:
-        user = User.query.filter(User.email == response["email"]).first()
-        user.verify = True
-        db.session.add(user)
-        db.session.commit()
-        return "Email Verified"
-
-    return "verification link has expired"
+    user = User.query.filter(User.email == user_email).first()
+    user.verify = True
+    db.session.add(user)
+    db.session.commit()
+    return "Email Verified"
 
 
 @authentication.route("/generate_reset_url", methods=["POST"])
@@ -103,16 +96,42 @@ def new_reset_token():
 
 @authentication.route("/recover_password", methods=["POST"])
 def password_recovery():
-    response = verify_token(value=request.form["token"], table=PasswordReset)
+    user_email = verify_token(value=request.form["token"], table=PasswordReset)
 
-    if response["success"]:
-        user = User.query.filter(User.email == response["email"]).first()
-        user.password = generate_password_hash(request.form["password"])
-        db.session.add(user)
+    user = User.query.filter(User.email == user_email).first()
+    user.password = generate_password_hash(request.form["password"])
+    db.session.add(user)
+    db.session.commit()
+    return "password changed succesfully"
+
+
+@authentication.route("/change_password", methods=["POST"])
+@login_required
+def change_password():
+    post_data = request.get_json()
+    user = User.query.filter(User.email == post_data["email"]).first()
+    if check_password_hash(user.password, post_data["currentPassword"]):
+        user.password = generate_password_hash(post_data["newPassword"])
         db.session.commit()
-        return "password changed succesfully"
+        return "Password sucessfully changed"
+    abort(401, description="current password incorrect")
 
-    return "password reset link has expired"
+
+@authentication.route("/change_acount_info", methods=["POST"])
+@login_required
+def change_account_info():
+    editable_info = ["email", "username"]
+    post_data = request.get_json()
+    if post_data["column"] not in editable_info:
+        abort(403)
+    user = User.query.filter(User.email == post_data["email"]).first()
+    if check_password_hash(user.password, post_data["password"]):
+        setattr(user, post_data["column"], post_data["value"])
+        if post_data["column"] == "email":
+            user.verify = False
+        db.session.commit()
+        return "Password sucessfully changed"
+    abort(401, description="password incorrect")
 
 
 @authentication.route("/check", methods=["GET", "POST"])
