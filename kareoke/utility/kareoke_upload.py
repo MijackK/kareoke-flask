@@ -2,9 +2,30 @@ from minio import Minio
 from minio.error import S3Error
 import os
 import secrets
-from flask import abort
+from flask import abort, current_app
 
 
+def generate_object_id(name):
+    object_id = name.rsplit(".", 1)[0].lower() + secrets.token_urlsafe()
+    extension = name.rsplit(".", 1)[1].lower()
+    return {
+        "object_id": f"{object_id}.{extension}".replace(" ", ""),
+        "extension": extension,
+    }
+
+
+def generate_file_object(file):
+    image_size = os.fstat(file.fileno()).st_size
+    info = generate_object_id(file.filename)
+    return {
+        "object_id": info["object_id"],
+        "extension": info["extension"],
+        "size": image_size,
+        "file": file,
+    }
+
+
+# file is an array of dictionaries, {object_id,size,file}
 def upload_files(files):
     client = Minio(
         "localhost:9000",
@@ -13,45 +34,37 @@ def upload_files(files):
         secret_key=os.environ["OBJECT_SERVER_PASSWORD"],
     )
     # check if the bucket exists
-    found = client.bucket_exists("kareoke")
-    new_objects = []
+    bucket = current_app.config["UPLOAD_BUCKET"]
+    found = client.bucket_exists(bucket)
     files_added = 0
 
     if not found:
-        abort(500)
+        client.make_bucket(bucket)
 
-    for media in files:
-        filename = media.filename.rsplit(".", 1)[0].lower() + secrets.token_urlsafe()
-        extension = media.filename.rsplit(".", 1)[1].lower()
+    for file_data in files:
+        filename = file_data["object_id"]
+        size = file_data["size"]
+        image = file_data["file"]
 
-        # check if extension is allowed
-        size = os.fstat(media.fileno()).st_size
-        # check that file type isnt to large.
         result = client.put_object(
-            bucket_name="kareoke",
-            object_name=f"{filename}.{extension}",
-            data=media,
+            bucket_name=bucket,
+            object_name=filename,
+            data=image,
             length=size,
-            content_type=media.content_type,
+            content_type=image.content_type,
         )
 
         print(
             {
                 "message": "sucessfully added",
-                "name": media.filename,
+                "name": image.filename,
                 "objectID": result.object_name,
                 "size": f"{size/1000/1000} mb",
             }
         )
-        new_objects.append(
-            {"name": media.filename, "objectID": result.object_name, "size": size}
-        )
         files_added += 1
 
-    return {
-        "message": f"{files_added}/{len(files)} sucessfully stored",
-        "objects": new_objects,
-    }
+    return f"{files_added}/{len(files)} sucessfully stored"
 
 
 def delete_files(remove_files):
