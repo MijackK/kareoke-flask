@@ -1,8 +1,7 @@
 from minio import Minio
-from minio.error import S3Error
 import os
 import secrets
-from flask import abort, current_app
+from flask import current_app
 
 
 def generate_object_id(name):
