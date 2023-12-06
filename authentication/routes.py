@@ -1,14 +1,15 @@
 from flask import Blueprint, jsonify, session, request, abort, render_template
-from authentication.models import User, PasswordReset, EmailVerification
+import os
+from authentication.models import User
 from app import db
 from werkzeug.security import check_password_hash, generate_password_hash
 from authentication.decorator import login_required
 from authentication.utility.generate_token import (
-    generate_reset_token,
-    generate_verify_token,
+    generate_token,
     verify_token,
     generate_csrf_token,
 )
+from authentication.utility.email import send_mail
 
 
 authentication = Blueprint("auth", __name__, url_prefix="/auth")
@@ -59,9 +60,16 @@ def create_account():
         password=generate_password_hash(post_data["password"]),
     )
     db.session.add(new_user)
-    # send verify link to email
-    generate_verify_token(post_data["email"])
     db.session.commit()
+
+    token = generate_token(email=post_data["email"], type="email")
+    url = f"{os.environ['DOMAIN']}/verifyemail.html?token={token}"
+    send_mail(
+        post_data["email"],
+        render_template("verify_email.html", token_url=url),
+        "Verify Email",
+    )
+
     return "account created succesfully"
 
 
@@ -71,7 +79,13 @@ def generate_verify():
     user = User.query.get(session["user_id"])
     if user.verify:
         return "already verified"
-    generate_verify_token(user.email)
+    token = generate_token(email=user.email, type="email")
+    url = f"{os.environ['DOMAIN']}/verifyemail.html?token={token}"
+    send_mail(
+        user.email,
+        render_template("verify_email.html", token_url=url),
+        "Verify Email",
+    )
     return "verification link sent to email"
 
 
@@ -79,7 +93,7 @@ def generate_verify():
 def verify_email():
     post_data = request.get_json()
 
-    user_email = verify_token(value=post_data["token"], table=EmailVerification)
+    user_email = verify_token(value=post_data["token"], type="email")
 
     user = User.query.filter(User.email == user_email).first()
     user.verify = True
@@ -90,13 +104,24 @@ def verify_email():
 
 @authentication.route("/generate_reset_url", methods=["POST"])
 def new_reset_token():
-    generate_reset_token(request.form["email"])
+    token = generate_token(email=request.form["email"], type="password")
+    url = f"{os.environ['DOMAIN']}/passwordreset.html?token={token}"
+    print(url)
+    send_mail(
+        recipient=request.form["email"],
+        html=render_template(
+            "password_reset_email.html",
+            token_url=url,
+        ),
+        title="Password Reset",
+    )
+
     return "Password Reset url has been sent to your email"
 
 
 @authentication.route("/recover_password", methods=["POST"])
 def password_recovery():
-    user_email = verify_token(value=request.form["token"], table=PasswordReset)
+    user_email = verify_token(value=request.form["token"], type="password")
 
     user = User.query.filter(User.email == user_email).first()
     user.password = generate_password_hash(request.form["password"])
