@@ -26,6 +26,9 @@ class Config:
 
     # rate limiting
 
+    # object server
+    UPLOAD_BUCKET = "kareoke"
+
 
 class ProductionConfig(Config):
     """Uses production database server."""

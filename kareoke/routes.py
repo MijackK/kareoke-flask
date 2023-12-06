@@ -1,10 +1,14 @@
 from flask import Blueprint, request, session, abort
-from kareoke.utility.kareoke_upload import upload_files, delete_files
-from kareoke.models import BeatMap, Audio, Background, HighScore
+from kareoke.utility.kareoke_upload import (
+    upload_files,
+    delete_files,
+    generate_file_object,
+)
+from kareoke.models import BeatMap, HighScore, Media
 from authentication.models import User
 import traceback
 import json
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from authentication.decorator import login_required
 from app import db
 
@@ -24,27 +28,26 @@ def create_map():
     db.session.add(new_map)
     db.session.flush()
     try:
-        result = upload_files([background, audio])
-        background_info = result["objects"][0]
-        audio_info = result["objects"][1]
+        background_info = generate_file_object(background)
+        audio_info = generate_file_object(audio)
         # save the background to database
-        new_background = Background(
-            name=background_info["name"],
+        new_background = Media(
             beatMap=new_map.id,
-            objectID=background_info["objectID"],
+            objectID=background_info["object_id"],
             size=background_info["size"],
+            type="background",
         )
-        new_audio = Audio(
-            name=audio_info["name"],
+        new_audio = Media(
             beatMap=new_map.id,
-            objectID=audio_info["objectID"],
+            objectID=audio_info["object_id"],
             size=audio_info["size"],
+            type="audio",
         )
         db.session.add(new_background)
         db.session.add(new_audio)
         db.session.commit()
-
-        print(result["message"])
+        result = upload_files([background_info, audio_info])
+        print(result)
         beatMap = {
             "id": new_map.id,
             "name": new_map.name,
@@ -83,11 +86,10 @@ def get_map():
 
     # update this query to use aggregator function to put all the
     # media in an array
-    get_map = (
-        db.session.query(BeatMap, Audio, Background, User, HighScore)
+    map_data = (
+        db.session.query(BeatMap, Media, User, HighScore)
         .select_from(BeatMap)
-        .join(Audio)
-        .join(Background)
+        .join(Media)
         .outerjoin(
             HighScore,
             and_(
@@ -95,24 +97,40 @@ def get_map():
                 HighScore.user == session.get("user_id"),
             ),
         )
+        .with_entities(
+            BeatMap,
+            User.username.label("username"),
+            HighScore.score.label("score"),
+            func.array_agg(
+                func.json_build_object("type", Media.type, "objectID", Media.objectID)
+            ).label("media"),
+        )
         .filter(BeatMap.id == map_id)
+        .group_by(BeatMap, User.username, HighScore.score)
         .first()
     )
-    if not get_map:
+    if not map_data:
         abort(404, "Map does not exists")
-    beat_map = get_map.BeatMap
-    audio = get_map.Audio
-    background = get_map.Background
+
+    beat_map = map_data.BeatMap
+    author = map_data.username
+    highscore = map_data.score
+    audio = [value["objectID"] for value in map_data.media if value["type"] == "audio"][
+        0
+    ]
+    background = [
+        value["objectID"] for value in map_data.media if value["type"] == "background"
+    ][0]
 
     response = {
         "name": beat_map.name,
         "id": beat_map.id,
         "beatMap": beat_map.beatMap,
-        "audio": f"kareoke/{audio.objectID}",
-        "background": f"kareoke/{background.objectID}",
+        "audio": f"kareoke/{audio}",
+        "background": f"kareoke/{background}",
         "dateUpdated": beat_map.date_updated,
-        "author": get_map.User.username,
-        "highscore": get_map.HighScore.score if get_map.HighScore else 0,
+        "author": author,
+        "highscore": highscore if highscore else 0,
     }
 
     return response
@@ -120,24 +138,36 @@ def get_map():
 
 @kareoke.route("/get_user_maps", methods=["GET"])
 def get_user_maps():
-    # update this query to use aggregator function to put all the
-    # media in an array
     get_maps = (
-        db.session.query(BeatMap, Audio, Background)
+        db.session.query(BeatMap, Media)
         .select_from(BeatMap)
-        .join(Audio)
-        .join(Background)
+        .join(Media)
+        .with_entities(
+            BeatMap,
+            func.array_agg(
+                func.json_build_object("type", Media.type, "objectID", Media.objectID)
+            ),
+        )
         .filter(BeatMap.user == session["user_id"])
+        .group_by(
+            BeatMap,
+        )
     )
     response = []
-    for beat_map, audio, background in get_maps:
+    for beat_map, media_data in get_maps:
+        audio = [value["objectID"] for value in media_data if value["type"] == "audio"][
+            0
+        ]
+        background = [
+            value["objectID"] for value in media_data if value["type"] == "background"
+        ][0]
         response.append(
             {
                 "id": beat_map.id,
                 "name": beat_map.name,
                 "beatMap": beat_map.beatMap,
-                "background": f"kareoke/{background.objectID}",
-                "audio": f"kareoke/{audio.objectID}",
+                "background": f"kareoke/{background}",
+                "audio": f"kareoke/{audio}",
                 "dateUpdated": beat_map.date_updated,
             }
         )
@@ -188,17 +218,23 @@ def delete_map():
 
     # get the beat map
     target = (
-        db.session.query(BeatMap, Audio, Background)
+        db.session.query(BeatMap, Media)
         .select_from(BeatMap)
+        .join(Media)
         .filter(BeatMap.user == session["user_id"])
         .filter(BeatMap.id == post_data["id"])
+        .with_entities(
+            BeatMap,
+            func.array_agg(Media.objectID).label("media"),
+        )
+        .group_by(BeatMap)
         .first()
     )
 
     if target is None:
         abort(404, "Map does not exist in database")
     db.session.delete(target.BeatMap)
-    delete_files(remove_files=[target.Audio.objectID, target.Background.objectID])
+    delete_files(remove_files=target.media)
     db.session.commit()
 
     return "map deleted"
@@ -211,11 +247,9 @@ def add_highscore():
     beat_map_id = post_data["beatMapID"]
     score = post_data["score"]
 
-    get_highscore = (
-        HighScore.query.filter(HighScore.beatMap == beat_map_id)
-        .filter(HighScore.user == session["user_id"])
-        .first()
-    )
+    get_highscore = HighScore.query.filter(
+        HighScore.beatMap == beat_map_id, HighScore.user == session["user_id"]
+    ).first()
     # update highscore
     if get_highscore and get_highscore.score < score:
         get_highscore.score = score
