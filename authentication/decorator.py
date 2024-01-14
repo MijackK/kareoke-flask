@@ -12,7 +12,6 @@ def login_required(callback):
             if csrf_token == session["csrf_token"]:
                 return callback(**kwargs)
             print("Cross site attack prevented")
-            abort(401)
         print("Not allowed, please login")
         abort(401)
 
