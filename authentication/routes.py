@@ -10,6 +10,7 @@ from authentication.utility.generate_token import (
     generate_csrf_token,
 )
 from authentication.utility.email import send_mail
+from authentication.utility.verification import verify_password, email_verification
 
 
 authentication = Blueprint("auth", __name__, url_prefix="/auth")
@@ -48,6 +49,14 @@ def logout():
 @authentication.route("/register", methods=["POST"])
 def create_account():
     post_data = request.get_json()
+
+    if not email_verification(post_data["email"]):
+        abort(400, "invalid email")
+    if not verify_password(post_data["password"]):
+        abort(
+            400,
+            "password must have, more that 8 characters, atleast one uppercase letter, lowercase letter, number and special character",
+        )
 
     # add some validation here for password and email?
     check_exists = User.query.filter(User.email == post_data["email"]).first()
@@ -122,7 +131,8 @@ def new_reset_token():
 @authentication.route("/recover_password", methods=["POST"])
 def password_recovery():
     user_email = verify_token(value=request.form["token"], type="password")
-
+    if not verify_password(request.form["password"]):
+        abort(400, "password not strong enough")
     user = User.query.filter(User.email == user_email).first()
     user.password = generate_password_hash(request.form["password"])
     db.session.add(user)
@@ -134,6 +144,9 @@ def password_recovery():
 @login_required
 def change_password():
     post_data = request.get_json()
+    if not verify_password(post_data["newPassword"]):
+        abort(400, "password not strong enough")
+
     user = User.query.filter(User.email == post_data["email"]).first()
     if check_password_hash(user.password, post_data["currentPassword"]):
         user.password = generate_password_hash(post_data["newPassword"])
