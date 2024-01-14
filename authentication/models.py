@@ -41,3 +41,30 @@ class TokenVerification(db.Model):
         self.used = True
         db.session.commit()
         return False
+
+
+class AccessControl(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(
+        db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), index=True
+    )
+    permission = db.Column(db.String)
+    date_created = db.Column(db.DateTime, default=datetime.now())
+
+    def __init__(self, user, permission):
+        self.user = user
+        self.permission = permission
+
+
+class Notifications(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.String)
+    read = db.Column(db.Boolean, default=False)
+    user = db.Column(
+        db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), index=True
+    )
+    date_created = db.Column(db.DateTime, default=datetime.now())
+
+    def __init__(self, user, message):
+        self.user = user
+        self, message = message
