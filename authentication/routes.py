@@ -147,7 +147,7 @@ def change_password():
     if not verify_password(post_data["newPassword"]):
         abort(400, "password not strong enough")
 
-    user = User.query.filter(User.email == post_data["email"]).first()
+    user = User.query.get(session["user_id"])
     if check_password_hash(user.password, post_data["currentPassword"]):
         user.password = generate_password_hash(post_data["newPassword"])
         db.session.commit()
@@ -162,7 +162,7 @@ def change_account_info():
     post_data = request.get_json()
     if post_data["column"] not in editable_info:
         abort(403)
-    user = User.query.filter(User.email == post_data["email"]).first()
+    user = user = User.query.get(session["user_id"])
     if check_password_hash(user.password, post_data["password"]):
         setattr(user, post_data["column"], post_data["value"])
         if post_data["column"] == "email":
