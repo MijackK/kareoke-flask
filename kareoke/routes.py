@@ -163,6 +163,7 @@ def get_map():
 
 
 @kareoke.route("/get_user_maps", methods=["GET"])
+@login_required
 def get_user_maps():
     get_maps = (
         db.session.query(BeatMap, Media)
@@ -203,6 +204,7 @@ def get_user_maps():
 
 
 @kareoke.route("/save_map", methods=["PUT"])
+@login_required
 def save_map():
     editable_columns = ["name", "beatMap"]
     post_data = request.get_json()
@@ -233,16 +235,19 @@ def save_map():
 
 
 @kareoke.route("/change_audio", methods=["PUT"])
+@login_required
 def change_audio():
     return "audio changed"
 
 
 @kareoke.route("/change_background", methods=["PUT"])
+@login_required
 def change_background():
     return "background changed"
 
 
 @kareoke.route("/delete_map", methods=["DELETE"])
+@login_required
 def delete_map():
     post_data = request.get_json()
 
