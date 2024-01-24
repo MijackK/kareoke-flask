@@ -26,7 +26,7 @@ class Config:
 
     DRAFT_LIMIT = 5
     MAX_MAP_SIZE = 8000000  # 8MB
-    PAGE_LIMIT = 1
+    PAGE_LIMIT = 12
 
     # rate limiting
 
