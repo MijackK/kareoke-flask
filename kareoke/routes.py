@@ -8,7 +8,7 @@ from kareoke.models import BeatMap, HighScore, Media
 from authentication.models import User
 import traceback
 import json
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, func, or_, case
 from authentication.decorator import login_required, require_admin, require_verify
 from app import db
 
@@ -80,10 +80,44 @@ def create_map():
 @kareoke.route("/get_published", methods=["GET"])
 def get_published():
     page = int(request.args.get("page"))
-    search = request.args.get("search")
+    search_keys = (
+        request.args.get("search").split(",")
+        if request.args.get("searchKey") != ""
+        else []
+    )
+
+    words_subquery = (
+        db.session.query(BeatMap)
+        .with_entities(
+            BeatMap.id.label("post"),
+            func.unnest(func.string_to_array(BeatMap.name, " ")).label("word"),
+        )
+        .filter(
+            BeatMap.status == "published",
+            or_(*[BeatMap.name.ilike(f"%{key}%") for key in search_keys]),
+        )
+        .subquery()
+    )
+
     get_maps = (
-        BeatMap.query.filter(
-            BeatMap.status == "published", BeatMap.name.ilike(f"%{search}%")
+        db.session.query(BeatMap)
+        .select_from(BeatMap)
+        .join(words_subquery, BeatMap.id == words_subquery.c.post)
+        .with_entities(
+            BeatMap.id.label("id"),
+            BeatMap.name.label("name"),
+        )
+        .group_by(BeatMap.id, BeatMap.name)
+        .order_by(
+            func.count(
+                case(
+                    *[
+                        (words_subquery.c.word.ilike(f"%{key}%"), 1)
+                        for key in search_keys
+                    ],
+                    else_=None,
+                )
+            ).desc()
         )
         .paginate(page=page, per_page=current_app.config["PAGE_LIMIT"], error_out=False)
         .items
@@ -102,7 +136,6 @@ def get_map():
     if user:
         is_admin = user.admin
 
-    # update this query to use aggregator function to put all the
     # media in an array
     map_data = (
         db.session.query(BeatMap, Media, User, HighScore)
@@ -234,10 +267,35 @@ def save_map():
     return f"beatMap '{beat_map.name}' updated"
 
 
-@kareoke.route("/change_audio", methods=["PUT"])
+@kareoke.route("/change_media", methods=["PUT"])
 @login_required
 def change_audio():
-    return "audio changed"
+    map_id = request.form["mapID"]
+    type = request.form["type"]
+    new_media = request.file["audio"]
+    media = (
+        db.session.query(Media, BeatMap)
+        .select_from(Media)
+        .join(BeatMap)
+        .filter(BeatMap.user == session["user_id"])
+        .filter(Media.beatMap == map_id, Media.type == type)
+        .first()
+    )
+
+    if media is None:
+        abort(404)
+
+    media_info = generate_file_object(new_media)
+    # add media
+    result = upload_files([media_info])
+    print(result)
+    # delete media
+    delete_files([media.objectID])
+
+    media.objectID = media_info["object_id"]
+    db.session.commit()
+
+    return f"{type} changed"
 
 
 @kareoke.route("/change_background", methods=["PUT"])
