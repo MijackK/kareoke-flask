@@ -117,7 +117,8 @@ def get_published():
                     ],
                     else_=None,
                 )
-            ).desc()
+            ).desc(),
+            BeatMap.date_created.desc(),
         )
         .paginate(page=page, per_page=current_app.config["PAGE_LIMIT"], error_out=False)
         .items
@@ -190,6 +191,7 @@ def get_map():
         "dateUpdated": beat_map.date_updated,
         "author": author,
         "highscore": highscore if highscore else 0,
+        "status": beat_map.status,
     }
 
     return response
@@ -272,20 +274,41 @@ def save_map():
 def change_audio():
     map_id = request.form["mapID"]
     type = request.form["type"]
-    new_media = request.file["audio"]
-    media = (
+    new_media = request.files["media"]
+    media_data = (
         db.session.query(Media, BeatMap)
         .select_from(Media)
         .join(BeatMap)
+        .with_entities(Media, BeatMap.status.label("status"))
         .filter(BeatMap.user == session["user_id"])
-        .filter(Media.beatMap == map_id, Media.type == type)
-        .first()
+        .filter(Media.beatMap == map_id)
     )
+
+    #
+    media = None
+    status = None
+    size = 0
+
+    for value in media_data:
+        if value.Media.type == type:
+            media = value.Media
+            status = value.status
+        else:
+            size += value.Media.size
 
     if media is None:
         abort(404)
 
+    if status != "draft":
+        abort(403, "Can only edit draft maps.")
+
     media_info = generate_file_object(new_media)
+    if size + media_info["size"] > current_app.config["MAX_MAP_SIZE"]:
+        abort(
+            403,
+            f"file too large, must be smaller than or equal to {(current_app.config['MAX_MAP_SIZE']-size)/1000000}MB",
+        )
+
     # add media
     result = upload_files([media_info])
     print(result)
@@ -293,15 +316,10 @@ def change_audio():
     delete_files([media.objectID])
 
     media.objectID = media_info["object_id"]
+    media.size = media_info["size"]
     db.session.commit()
 
-    return f"{type} changed"
-
-
-@kareoke.route("/change_background", methods=["PUT"])
-@login_required
-def change_background():
-    return "background changed"
+    return f"kareoke/{media.objectID}"
 
 
 @kareoke.route("/delete_map", methods=["DELETE"])
