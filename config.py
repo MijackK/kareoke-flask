@@ -5,6 +5,7 @@ from datetime import timedelta
 
 class Config:
     SECRET_KEY = os.environ["SECRET_KEY"]
+    DEBUG = True if os.environ["MODE"] == "development" else False
     CORS_ORIGINS = os.environ["ALLOWED_ORIGINS"].split(",")
     CORS_SUPPORTS_CREDENTIALS = True
     SQLALCHEMY_DATABASE_URI = URL.create(
