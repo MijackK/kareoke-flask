@@ -17,13 +17,9 @@ def create_app():
         get_remote_address,
         app=app,
     )
-
-    CORS(
-        app,
-        resources={r"/*": {"origins": "http://localhost:8080"}},
-        supports_credentials=True,
-    )
     app.config.from_object("config.Config")
+
+    CORS(app)
 
     # connect to database
     db.init_app(app)
