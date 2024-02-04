@@ -23,7 +23,6 @@ class Config:
     MAIL_USERNAME = os.environ["MAIL_USERNAME"]
     MAIL_PASSWORD = os.environ["MAIL_PASSWORD"]
     MAIL_DEFAULT_SENDER = os.environ["MAIL_USERNAME"]
-
     DRAFT_LIMIT = 5
     MAX_MAP_SIZE = 8000000  # 8MB
     PAGE_LIMIT = 12

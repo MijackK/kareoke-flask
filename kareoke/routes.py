@@ -3,6 +3,7 @@ from kareoke.utility.kareoke_upload import (
     upload_files,
     delete_files,
     generate_file_object,
+    generate_url,
 )
 from kareoke.models import BeatMap, HighScore, Media
 from authentication.models import User
@@ -66,9 +67,10 @@ def create_map():
         "id": new_map.id,
         "name": new_map.name,
         "beatMap": new_map.beatMap,
-        "background": f"kareoke/{new_background.objectID}",
-        "audio": f"kareoke/{new_audio.objectID}",
+        "background": generate_url(new_background.objectID),
+        "audio": generate_url(new_audio.objectID),
         "dateUpdated": new_map.date_updated,
+        "status": new_map.status,
     }
 
     return {
@@ -186,8 +188,8 @@ def get_map():
         "name": beat_map.name,
         "id": beat_map.id,
         "beatMap": beat_map.beatMap,
-        "audio": f"kareoke/{audio}",
-        "background": f"kareoke/{background}",
+        "audio": generate_url(audio),
+        "background": generate_url(background),
         "dateUpdated": beat_map.date_updated,
         "author": author,
         "highscore": highscore if highscore else 0,
@@ -228,8 +230,8 @@ def get_user_maps():
                 "id": beat_map.id,
                 "name": beat_map.name,
                 "beatMap": beat_map.beatMap,
-                "background": f"kareoke/{background}",
-                "audio": f"kareoke/{audio}",
+                "background": generate_url(background),
+                "audio": generate_url(audio),
                 "dateUpdated": beat_map.date_updated,
                 "status": beat_map.status,
             }
@@ -319,7 +321,7 @@ def change_audio():
     media.size = media_info["size"]
     db.session.commit()
 
-    return f"kareoke/{media.objectID}"
+    return generate_url(media.objectID)
 
 
 @kareoke.route("/delete_map", methods=["DELETE"])
