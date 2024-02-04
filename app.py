@@ -39,7 +39,9 @@ def create_app():
         from flask import current_app
 
         if not current_app.config["DEBUG"]:
-            return "not allowed in production"
+            db.create_all()
+            db.session.commit()
+            return "database tables created"
 
         db.drop_all()
         db.create_all()
