@@ -36,6 +36,10 @@ def create_app():
     def hello_init():
         from authentication.models import User
         from werkzeug.security import generate_password_hash
+        from flask import current_app
+
+        if not current_app.config["DEBUG"]:
+            return "not allowed in production"
 
         db.drop_all()
         db.create_all()
