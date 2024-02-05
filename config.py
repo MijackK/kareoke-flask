@@ -8,13 +8,7 @@ class Config:
     DEBUG = True if os.environ["MODE"] == "development" else False
     CORS_ORIGINS = os.environ["ALLOWED_ORIGINS"].split(",")
     CORS_SUPPORTS_CREDENTIALS = True
-    SQLALCHEMY_DATABASE_URI = URL.create(
-        drivername=os.environ["DRIVER_NAME"],
-        username=os.environ["DB_USERNAME"],
-        password=os.environ["DB_PASSWORD"],
-        host=os.environ["DB_HOST"],
-        database=os.environ["DB_NAME"],
-    )
+    SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URL"]
     # expiry dates
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)
     EMAIL_VERIFICATION_TOKEN_EXPIRY = "30,day"
