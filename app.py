@@ -32,18 +32,16 @@ def create_app():
     app.register_blueprint(authentication)
     app.register_blueprint(kareoke)
 
-    @app.route("/init", methods=["GET"])
+    @app.route("/init", methods=["POST"])
     def hello_init():
         from authentication.models import User
         from werkzeug.security import generate_password_hash
         from flask import current_app
 
-        """ 
-         if not current_app.config["DEBUG"]:
+        if not current_app.config["DEBUG"]:
             db.create_all()
             db.session.commit()
-            return "database tables created" 
-        """
+            return "database tables created"
 
         db.drop_all()
         db.create_all()
