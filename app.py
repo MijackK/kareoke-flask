@@ -10,7 +10,7 @@ db = SQLAlchemy()
 mail = Mail()
 
 
-def create_app(environ, start_response):
+def create_app():
     # create and configure the app
     app = Flask(__name__)
     limiter = Limiter(
@@ -59,3 +59,6 @@ def create_app(environ, start_response):
         return "initialized"
 
     return app
+
+
+app = create_app()
