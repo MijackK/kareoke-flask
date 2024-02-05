@@ -72,7 +72,7 @@ def create_account():
     db.session.commit()
 
     token = generate_token(email=post_data["email"], type="email")
-    url = f"{os.environ['DOMAIN']}/verifyemail.html?token={token}"
+    url = f"{os.environ['FRONTEND_DOMAIN']}/verifyemail.html?token={token}"
     send_mail(
         post_data["email"],
         render_template("verify_email.html", token_url=url),
@@ -89,7 +89,7 @@ def generate_verify():
     if user.verify:
         return "already verified"
     token = generate_token(email=user.email, type="email")
-    url = f"{os.environ['DOMAIN']}/verifyemail.html?token={token}"
+    url = f"{os.environ['FRONTEND_DOMAIN']}/verifyemail.html?token={token}"
     send_mail(
         user.email,
         render_template("verify_email.html", token_url=url),
@@ -114,7 +114,7 @@ def verify_email():
 @authentication.route("/generate_reset_url", methods=["POST"])
 def new_reset_token():
     token = generate_token(email=request.form["email"], type="password")
-    url = f"{os.environ['DOMAIN']}/passwordreset.html?token={token}"
+    url = f"{os.environ['FRONTEND_DOMAIN']}/passwordreset.html?token={token}"
     print(url)
     send_mail(
         recipient=request.form["email"],
