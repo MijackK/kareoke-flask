@@ -25,7 +25,7 @@ def create_app(environ, start_response):
     db.init_app(app)
     mail.init_app(app)
     limiter.init_app(app)
-    """ 
+
     from authentication.routes import authentication
     from kareoke.routes import kareoke
 
@@ -56,7 +56,6 @@ def create_app(environ, start_response):
         db.session.add(admin)
         # commit changes
         db.session.commit()
-        return "initialized" 
-    """
+        return "initialized"
 
     return app
