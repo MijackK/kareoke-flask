@@ -24,19 +24,25 @@ def generate_file_object(file):
     }
 
 
+def connect():
+
+    return Minio(
+        os.environ["OBJECT_SERVER_ENDPOINT"],
+        secure=True,
+        access_key=os.environ["OBJECT_SERVER_USERNAME"],
+        secret_key=os.environ["OBJECT_SERVER_PASSWORD"],
+    )
+
+
 def generate_url(objectID):
+
     route = f"{'' if current_app.config['DEBUG'] else 'file/'}{current_app.config['UPLOAD_BUCKET']}/{objectID}"
     return f'{os.environ["OBJECT_SERVER_DOMAIN"]}/{route}'
 
 
 # file is an array of dictionaries, {object_id,size,file}
 def upload_files(files):
-    client = Minio(
-        os.environ["OBJECT_SERVER_DOMAIN"],
-        secure=False,
-        access_key=os.environ["OBJECT_SERVER_USERNAME"],
-        secret_key=os.environ["OBJECT_SERVER_PASSWORD"],
-    )
+    client = connect()
     # check if the bucket exists
     bucket = current_app.config["UPLOAD_BUCKET"]
     found = client.bucket_exists(bucket)
@@ -72,12 +78,9 @@ def upload_files(files):
 
 
 def delete_files(remove_files):
-    client = Minio(
-        os.environ["OBJECT_SERVER_DOMAIN"],
-        secure=False,
-        access_key=os.environ["OBJECT_SERVER_USERNAME"],
-        secret_key=os.environ["OBJECT_SERVER_PASSWORD"],
-    )
+    client = connect()
     for file in remove_files:
-        client.remove_object(bucket_name=os.environ["UPLOAD_BUCKET"], object_name=file)
+        client.remove_object(
+            bucket_name=current_app.config["UPLOAD_BUCKET"], object_name=file
+        )
         print(f"{file} succesfully removed")
