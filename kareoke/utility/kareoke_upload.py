@@ -32,7 +32,7 @@ def generate_url(objectID):
 # file is an array of dictionaries, {object_id,size,file}
 def upload_files(files):
     client = Minio(
-        "localhost:9000",
+        os.environ["OBJECT_SERVER_DOMAIN"],
         secure=False,
         access_key=os.environ["OBJECT_SERVER_USERNAME"],
         secret_key=os.environ["OBJECT_SERVER_PASSWORD"],
@@ -73,7 +73,7 @@ def upload_files(files):
 
 def delete_files(remove_files):
     client = Minio(
-        "localhost:9000",
+        os.environ["OBJECT_SERVER_DOMAIN"],
         secure=False,
         access_key=os.environ["OBJECT_SERVER_USERNAME"],
         secret_key=os.environ["OBJECT_SERVER_PASSWORD"],
