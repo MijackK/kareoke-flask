@@ -25,7 +25,8 @@ def generate_file_object(file):
 
 
 def generate_url(objectID):
-    return f'{os.environ["OBJECT_SERVER_DOMAIN"]}/{current_app.config["UPLOAD_BUCKET"]}/{objectID}'
+    route = f"{'' if current_app.config['DEBUG'] else 'file/'}{current_app.config['UPLOAD_BUCKET']}/{objectID}"
+    return f'{os.environ["OBJECT_SERVER_DOMAIN"]}/{route}'
 
 
 # file is an array of dictionaries, {object_id,size,file}
