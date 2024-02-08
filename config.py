@@ -15,7 +15,7 @@ class Config:
     PASSWORD_RESET_TOKEN_EXPIRY = "1,day"
     # email
     MAIL_SERVER = os.environ["MAIL_SERVER"]
-    MAIL_PORT = 25
+    MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.environ["MAIL_USERNAME"]
     MAIL_PASSWORD = os.environ["MAIL_PASSWORD"]

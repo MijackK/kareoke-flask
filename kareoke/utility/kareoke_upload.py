@@ -25,10 +25,11 @@ def generate_file_object(file):
 
 
 def connect():
+    secure = False if current_app.config["DEBUG"] else True
 
     return Minio(
         os.environ["OBJECT_SERVER_ENDPOINT"],
-        secure=True,
+        secure=secure,
         access_key=os.environ["OBJECT_SERVER_USERNAME"],
         secret_key=os.environ["OBJECT_SERVER_PASSWORD"],
     )

@@ -61,22 +61,29 @@ def create_map():
     db.session.add(new_background)
     db.session.add(new_audio)
     db.session.commit()
-    result = upload_files([background_info, audio_info])
-    print(result)
-    beatMap = {
-        "id": new_map.id,
-        "name": new_map.name,
-        "beatMap": new_map.beatMap,
-        "background": generate_url(new_background.objectID),
-        "audio": generate_url(new_audio.objectID),
-        "dateUpdated": new_map.date_updated,
-        "status": new_map.status,
-    }
+    try:
+        result = upload_files([background_info, audio_info])
+        print(result)
+        beatMap = {
+            "id": new_map.id,
+            "name": new_map.name,
+            "beatMap": new_map.beatMap,
+            "background": generate_url(new_background.objectID),
+            "audio": generate_url(new_audio.objectID),
+            "dateUpdated": new_map.date_updated,
+            "status": new_map.status,
+        }
 
-    return {
-        "message": f"beatmap {request.form['map-name']} added",
-        "map": beatMap,
-    }
+        return {
+            "message": f"beatmap {request.form['map-name']} added",
+            "map": beatMap,
+        }
+    except Exception as e:
+        print(e)
+        abort(
+            500,
+            "some of you're files might not have been uploaded, realod the page to check that everything is alright",
+        )
 
 
 @kareoke.route("/get_published", methods=["GET"])
