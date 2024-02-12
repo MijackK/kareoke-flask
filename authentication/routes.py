@@ -3,7 +3,7 @@ import os
 from authentication.models import User
 from app import db
 from werkzeug.security import check_password_hash, generate_password_hash
-from authentication.decorator import login_required
+from authentication.decorator import login_required, require_admin
 from authentication.utility.generate_token import (
     generate_token,
     verify_token,
@@ -184,3 +184,47 @@ def check():
         "admin": info.admin,
         "csrfToken": session["csrf_token"],
     }
+
+
+@authentication.route("/ban", methods=["POST"])
+@require_admin
+def ban():
+    post_data = request.get_json()
+    user = User.query.get(post_data["user"])
+    if user is None:
+        abort(404, "user doesnt exist")
+    if user.banned:
+        return "user already banned"
+    user.banned = post_data["reason"]
+    db.session.commit()
+
+    return f"user {user.username} is banned"
+
+
+@authentication.route("/unban", methods=["POST"])
+@require_admin
+def unban():
+    post_data = request.get_json()
+    user = User.query.get(post_data["user"])
+    if user is None:
+        abort(404, "user doesnt exist")
+    if user.banned is None:
+        return "user not banned"
+    user.banned = None
+    db.session.commit()
+
+    return f"user {user.username} is unbanned"
+
+
+@authentication.route("/get_users", methods=["GET"])
+@require_admin
+def get_users():
+    users = User.query.filter(User.admin == False).all()
+    user_list = []
+
+    for user in users:
+        user_list.append(
+            {"id": user.id, "username": user.username, "banned": user.banned}
+        )
+
+    return user_list

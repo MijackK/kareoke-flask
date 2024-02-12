@@ -10,6 +10,7 @@ class User(db.Model):
     password = db.Column(db.String)
     admin = db.Column(db.Boolean, default=False)
     verify = db.Column(db.Boolean, default=False)
+    banned = db.Column(db.String, default=None)
 
     def __init__(self, username, email, password):
         self.username = username
