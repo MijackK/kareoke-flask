@@ -15,7 +15,7 @@ def generate_csrf_token(length):
 def generate_token(email, type):
     user = User.query.filter(User.email == email).first()
     if not user:
-        return
+        abort(404)
     recent_token = (
         TokenVerification.query.filter(
             TokenVerification.email == email,

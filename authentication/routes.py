@@ -1,6 +1,14 @@
-from flask import Blueprint, jsonify, session, request, abort, render_template
+from flask import (
+    Blueprint,
+    current_app,
+    jsonify,
+    session,
+    request,
+    abort,
+    render_template,
+)
 import os
-from authentication.models import User
+from authentication.models import User, TokenVerification
 from app import db
 from werkzeug.security import check_password_hash, generate_password_hash
 from authentication.decorator import login_required, require_admin
@@ -73,6 +81,10 @@ def create_account():
 
     token = generate_token(email=post_data["email"], type="email")
     url = f"{os.environ['FRONTEND_DOMAIN']}/verifyemail.html?token={token}"
+    if current_app.config["DEBUG"]:
+        print(url)
+        return url
+
     send_mail(
         post_data["email"],
         render_template("verify_email.html", token_url=url),
@@ -90,6 +102,9 @@ def generate_verify():
         return "already verified"
     token = generate_token(email=user.email, type="email")
     url = f"{os.environ['FRONTEND_DOMAIN']}/verifyemail.html?token={token}"
+    if current_app.config["DEBUG"]:
+        print(url)
+        return url
     send_mail(
         user.email,
         render_template("verify_email.html", token_url=url),
@@ -115,7 +130,10 @@ def verify_email():
 def new_reset_token():
     token = generate_token(email=request.form["email"], type="password")
     url = f"{os.environ['FRONTEND_DOMAIN']}/passwordreset.html?token={token}"
-    print(url)
+
+    if current_app.config["DEBUG"]:
+        print(url)
+        return url
     send_mail(
         recipient=request.form["email"],
         html=render_template(
@@ -172,20 +190,6 @@ def change_account_info():
     abort(401, description="password incorrect")
 
 
-@authentication.route("/check", methods=["GET", "POST"])
-@login_required
-def check():
-    info = User.query.get(session["user_id"])
-
-    return {
-        "userName": info.username,
-        "email": info.email,
-        "verified": info.verify,
-        "admin": info.admin,
-        "csrfToken": session["csrf_token"],
-    }
-
-
 @authentication.route("/ban", methods=["POST"])
 @require_admin
 def ban():
@@ -228,3 +232,30 @@ def get_users():
         )
 
     return user_list
+
+
+@authentication.route("/check", methods=["GET", "POST"])
+@login_required
+def check():
+    info = (
+        User.query.outerjoin(TokenVerification, TokenVerification.email == User.email)
+        .with_entities(
+            User.username.label("username"),
+            User.email.label("email"),
+            User.verify.label("verify"),
+            User.admin.label("admin"),
+            TokenVerification.used.label("used"),
+        )
+        .filter(TokenVerification.type == "email", User.id == session["user_id"])
+        .order_by(TokenVerification.date_created.desc())
+        .first()
+    )
+
+    return {
+        "userName": info.username,
+        "email": info.email,
+        "verified": info.verify,
+        "admin": info.admin,
+        "csrfToken": session["csrf_token"],
+        "used": info.used if info.used is not None else True,
+    }

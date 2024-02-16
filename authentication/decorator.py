@@ -42,6 +42,9 @@ def require_verify(callback):
                 abort(403, "you have been banned, contact admin for resolution")
             if user.verify:
                 return callback(**kwargs)
-        abort(403, "Email not verified")
+        abort(
+            403,
+            f"Please verify your email by clicking on the link sent to {user.email}. if no email was sent, navigate to the account option and click the verify button.",
+        )
 
     return decorated_function
