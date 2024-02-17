@@ -23,6 +23,7 @@ class Config:
     DRAFT_LIMIT = 2
     MAX_MAP_SIZE = 8000000  # 8MB
     PAGE_LIMIT = 12
+    RATELIMIT_STORAGE_URI = os.environ["RATE_LIMIT_STORAGE"]
 
     # rate limiting
 

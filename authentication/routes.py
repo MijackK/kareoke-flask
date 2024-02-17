@@ -9,7 +9,7 @@ from flask import (
 )
 import os
 from authentication.models import User, TokenVerification
-from app import db
+from app import db, limiter
 from werkzeug.security import check_password_hash, generate_password_hash
 from authentication.decorator import login_required, require_admin
 from authentication.utility.generate_token import (
@@ -95,6 +95,7 @@ def create_account():
 
 
 @authentication.route("/generate_verify_url", methods=["POST"])
+@limiter.limit("10 per day")
 @login_required
 def generate_verify():
     user = User.query.get(session["user_id"])
@@ -127,6 +128,7 @@ def verify_email():
 
 
 @authentication.route("/generate_reset_url", methods=["POST"])
+@limiter.limit("10 per day")
 def new_reset_token():
     token = generate_token(email=request.form["email"], type="password")
     url = f"{os.environ['FRONTEND_DOMAIN']}/passwordreset.html?token={token}"

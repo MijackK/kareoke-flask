@@ -13,13 +13,14 @@ mail = Mail()
 def create_app():
     # create and configure the app
     app = Flask(__name__)
+
+    app.config.from_object("config.Config")
+
+    CORS(app)
     limiter = Limiter(
         get_remote_address,
         app=app,
     )
-    app.config.from_object("config.Config")
-
-    CORS(app)
 
     # connect to database
     db.init_app(app)
