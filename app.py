@@ -8,6 +8,7 @@ from flask_limiter.util import get_remote_address
 
 db = SQLAlchemy()
 mail = Mail()
+limiter = Limiter(get_remote_address)
 
 
 def create_app():
@@ -17,10 +18,6 @@ def create_app():
     app.config.from_object("config.Config")
 
     CORS(app)
-    limiter = Limiter(
-        get_remote_address,
-        app=app,
-    )
 
     # connect to database
     db.init_app(app)

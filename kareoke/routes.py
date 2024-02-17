@@ -7,7 +7,6 @@ from kareoke.utility.kareoke_upload import (
 )
 from kareoke.models import BeatMap, HighScore, Media
 from authentication.models import User
-import traceback
 import json
 from sqlalchemy import and_, func, or_, case
 from authentication.decorator import login_required, require_admin, require_verify
