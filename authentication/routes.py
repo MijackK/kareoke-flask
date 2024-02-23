@@ -19,7 +19,7 @@ from authentication.utility.generate_token import (
 )
 from authentication.utility.email import send_mail
 from authentication.utility.verification import verify_password, email_verification
-
+from sqlalchemy import or_
 
 authentication = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -248,7 +248,10 @@ def check():
             User.admin.label("admin"),
             TokenVerification.used.label("used"),
         )
-        .filter(TokenVerification.type == "email", User.id == session["user_id"])
+        .filter(
+            or_(TokenVerification.type == "email", TokenVerification.type == None),
+            User.id == session["user_id"],
+        )
         .order_by(TokenVerification.date_created.desc())
         .first()
     )
