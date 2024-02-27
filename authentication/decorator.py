@@ -7,6 +7,7 @@ from functools import wraps
 def login_required(callback):
     @wraps(callback)
     def decorated_function(**kwargs):
+        print(f"this is the {session['user_id']}")
         if "user_id" in session:
             banned = User.query.get(session["user_id"]).banned
             if banned:
@@ -37,8 +38,8 @@ def require_verify(callback):
     @wraps(callback)
     def decorated_function(**kwargs):
         if "user_id" in session:
-            print(session["user_id"])
             user = User.query.get(session["user_id"])
+            print(session["user_id"])
             if user.banned:
                 abort(403, "you have been banned, contact admin for resolution")
             if user.verify:
