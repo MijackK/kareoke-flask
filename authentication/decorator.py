@@ -37,6 +37,7 @@ def require_verify(callback):
     @wraps(callback)
     def decorated_function(**kwargs):
         if "user_id" in session:
+            print(session["user_id"])
             user = User.query.get(session["user_id"])
             if user.banned:
                 abort(403, "you have been banned, contact admin for resolution")
