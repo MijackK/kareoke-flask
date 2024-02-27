@@ -7,7 +7,6 @@ from functools import wraps
 def login_required(callback):
     @wraps(callback)
     def decorated_function(**kwargs):
-        print(f"this is the {session['user_id']}")
         if "user_id" in session:
             banned = User.query.get(session["user_id"]).banned
             if banned:
