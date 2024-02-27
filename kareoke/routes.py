@@ -10,13 +10,14 @@ from authentication.models import User
 import json
 from sqlalchemy import and_, func, or_, case
 from authentication.decorator import login_required, require_admin, require_verify
-from app import db
+from app import db, limiter
 
 
 kareoke = Blueprint("kareoke", __name__, url_prefix="/kareoke")
 
 
 @kareoke.route("/add_map", methods=["POST"])
+@limiter.limit("20 per day")
 @require_verify
 def create_map():
     drafts_amount = BeatMap.query.filter(BeatMap.status != "published").count()
@@ -278,6 +279,7 @@ def save_map():
 
 
 @kareoke.route("/change_media", methods=["PUT"])
+@limiter.limit("15 per day")
 @login_required
 def change_audio():
     map_id = request.form["mapID"]
