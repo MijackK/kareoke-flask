@@ -21,7 +21,7 @@ kareoke = Blueprint("kareoke", __name__, url_prefix="/kareoke")
 @require_verify
 def create_map():
     drafts_amount = BeatMap.query.filter(BeatMap.status != "published").count()
-    if drafts_amount >= current_app.config["DRAFT_LIMIT"]:
+    if drafts_amount > current_app.config["DRAFT_LIMIT"]:
         abort(403, "post limit reached")
 
     background = request.files["background"]
