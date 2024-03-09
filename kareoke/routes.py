@@ -20,7 +20,9 @@ kareoke = Blueprint("kareoke", __name__, url_prefix="/kareoke")
 @limiter.limit("20 per day")
 @require_verify
 def create_map():
-    drafts_amount = BeatMap.query.filter(BeatMap.status != "published").count()
+    drafts_amount = BeatMap.query.filter(
+        BeatMap.status != "published", BeatMap.user == session["user_id"]
+    ).count()
     if drafts_amount >= current_app.config["DRAFT_LIMIT"]:
         abort(403, "post limit reached")
 
