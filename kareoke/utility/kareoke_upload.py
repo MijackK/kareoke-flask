@@ -5,7 +5,7 @@ from flask import current_app
 
 
 def generate_object_id(name):
-    object_id = name.rsplit(".", 1)[0].lower() + secrets.token_urlsafe()
+    object_id = "kareoke" + secrets.token_urlsafe()
     extension = name.rsplit(".", 1)[1].lower()
     return {
         "object_id": f"{object_id}.{extension}".replace(" ", ""),
