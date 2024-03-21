@@ -23,7 +23,9 @@ class Config:
     MAIL_PASSWORD = os.environ["MAIL_PASSWORD"]
     MAIL_DEFAULT_SENDER = os.environ["MAIL_USERNAME"]
     DRAFT_LIMIT = 2
-    MAX_MAP_SIZE = 9000000  # 9MB
+    MAX_MAP_SIZE = (
+        int(os.environ["MEDIA_LIMIT"]) if os.environ["MEDIA_LIMIT"] else 15000000
+    )  # 15MB
     PAGE_LIMIT = 12
     RATELIMIT_STORAGE_URI = os.environ["RATE_LIMIT_STORAGE"]
 
