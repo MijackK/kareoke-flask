@@ -17,7 +17,7 @@ kareoke = Blueprint("kareoke", __name__, url_prefix="/kareoke")
 
 
 @kareoke.route("/add_map", methods=["POST"])
-@limiter.limit("20 per day")
+@limiter.limit("5 per day")
 @require_verify
 def create_map():
     drafts_amount = BeatMap.query.filter(
@@ -281,7 +281,7 @@ def save_map():
 
 
 @kareoke.route("/change_media", methods=["PUT"])
-@limiter.limit("15 per day")
+@limiter.limit("5 per day")
 @login_required
 def change_audio():
     map_id = request.form["mapID"]
