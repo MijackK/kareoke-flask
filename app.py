@@ -37,7 +37,7 @@ def create_app():
 
     @app.route("/")
     def hello():
-        abort(500)
+        app.logger.error(" hello world")
         return f"<h1 style='color:blue'>Hello There! app is currently in {app.config['DEBUG']} mode</h1>"
 
     @app.route("/init", methods=["POST"])
