@@ -5,7 +5,6 @@ from flask_mail import Mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.middleware.proxy_fix import ProxyFix
-import logging
 
 db = SQLAlchemy()
 mail = Mail()
@@ -35,6 +34,10 @@ def create_app():
 
     app.register_blueprint(authentication)
     app.register_blueprint(kareoke)
+
+    @app.route("/")
+    def hello():
+        return f"<h1 style='color:blue'>Hello There! app is currently in {app.config['DEBUG']} mode</h1>"
 
     @app.route("/init", methods=["POST"])
     def hello_init():
@@ -67,7 +70,5 @@ def create_app():
 
 app = create_app()
 
-if __name__ != "__main__":
-    gunicorn_logger = logging.getLogger("gunicorn.error")
-    app.logger.handlers = gunicorn_logger.handlers
-    app.logger.setLevel(gunicorn_logger.level)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0")
