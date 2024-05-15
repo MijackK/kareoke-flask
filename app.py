@@ -4,11 +4,12 @@ from flask_cors import CORS
 from flask_mail import Mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 db = SQLAlchemy()
 mail = Mail()
 limiter = Limiter(get_remote_address)
+# proxy = ProxyFix(x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 
 def create_app():
@@ -23,6 +24,10 @@ def create_app():
     db.init_app(app)
     mail.init_app(app)
     limiter.init_app(app)
+
+    # tell flask its behind a proxy
+    if not app.config["DEBUG"]:
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
     from authentication.routes import authentication
     from kareoke.routes import kareoke
