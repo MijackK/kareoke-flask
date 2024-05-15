@@ -1,6 +1,9 @@
 import os
 from sqlalchemy.engine.url import URL
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Config:
