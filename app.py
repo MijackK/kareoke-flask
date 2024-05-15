@@ -5,6 +5,7 @@ from flask_mail import Mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.middleware.proxy_fix import ProxyFix
+import logging
 
 db = SQLAlchemy()
 mail = Mail()
@@ -65,3 +66,8 @@ def create_app():
 
 
 app = create_app()
+
+if __name__ != "__main__":
+    gunicorn_logger = logging.getLogger("gunicorn.error")
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
