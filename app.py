@@ -25,9 +25,10 @@ def create_app():
     mail.init_app(app)
     limiter.init_app(app)
 
-    # tell flask its behind a proxy
+    """# tell flask its behind a proxy
     if not app.config["DEBUG"]:
-        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1) 
+    """
 
     from authentication.routes import authentication
     from kareoke.routes import kareoke
