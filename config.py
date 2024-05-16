@@ -13,7 +13,6 @@ class Config:
     CORS_SUPPORTS_CREDENTIALS = True
     SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URL"]
     SESSION_COOKIE_SAMESITE = "None"
-    SESSION_COOKIE_DOMAIN = os.environ["FRONTEND_DOMAIN"]
     SESSION_COOKIE_SECURE = True
     # expiry dates
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)
