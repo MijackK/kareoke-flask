@@ -38,7 +38,11 @@ def create_app():
     @app.route("/")
     def hello():
         app.logger.error(" hello world")
-        return f"<h1 style='color:blue'>Hello There! app is currently in {app.config['DEBUG']} mode</h1>"
+        from flask import request
+
+        karaoke = request.headers.get("karaoke")
+
+        return f"<h1 style='color:blue'>Hello There! app is currently in {app.config['DEBUG']} mode, sesson {karaoke}</h1>"
 
     @app.route("/init", methods=["POST"])
     def hello_init():
