@@ -14,6 +14,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URL"]
     SESSION_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_NAME = "karaoke"
     # expiry dates
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)
     EMAIL_VERIFICATION_TOKEN_EXPIRY = "30,day"
