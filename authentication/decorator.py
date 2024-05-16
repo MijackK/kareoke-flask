@@ -8,13 +8,10 @@ def login_required(callback):
     def decorated_function(**kwargs):
         if "user_id" in session:
             banned = User.query.get(session["user_id"]).banned
-
             if banned:
                 abort(403, "you have been banned, contact admin for resolution")
             csrf_token = request.headers.get("CSRF_TOKEN")
-            return f"<div> <h1>csrf match? {session['csrf_token']==request.headers.get('CSRF_TOKEN')}</h1> <br> <ol> <li>{session['csrf_token']}</li> <li>{request.headers.get('CSRF_TOKEN')}</li> </ol> </div>"
             if csrf_token == session["csrf_token"]:
-
                 return callback(**kwargs)
             print("Cross site attack prevented")
         print("Not allowed, please login")
