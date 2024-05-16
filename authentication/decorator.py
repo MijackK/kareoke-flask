@@ -12,8 +12,9 @@ def login_required(callback):
             if banned:
                 abort(403, "you have been banned, contact admin for resolution")
             csrf_token = request.headers.get("CSRF_TOKEN")
+            return f"<div> <h1>csrf match? {session['csrf_token']==request.headers.get('CSRF_TOKEN')}</h1> <br> <ol> <li>{session['csrf_token']}</li> <li>{request.headers.get('CSRF_TOKEN')}</li> </ol> </div>"
             if csrf_token == session["csrf_token"]:
-                return f" user id is {session.get('user_id')} and cookies are {request.headers.get('Cookie') } csrf {session['csrf_token']} alright"
+
                 return callback(**kwargs)
             print("Cross site attack prevented")
         print("Not allowed, please login")
