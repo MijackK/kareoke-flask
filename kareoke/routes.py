@@ -90,9 +90,6 @@ def create_map():
 
 @kareoke.route("/get_published", methods=["GET"])
 def get_published():
-    karaoke = request.headers.get("Cookie")
-    return f"<h1 style='color:blue'>Hello There! request cookies are {karaoke} and {session} </h1>"
-
     page = int(request.args.get("page"))
     search_keys = (
         request.args.get("search").split(",")

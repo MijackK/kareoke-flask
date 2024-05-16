@@ -1,5 +1,5 @@
 from flask import session, request, abort
-from app import db
+from app import app
 from authentication.models import User
 from functools import wraps
 
@@ -7,6 +7,9 @@ from functools import wraps
 def login_required(callback):
     @wraps(callback)
     def decorated_function(**kwargs):
+        app.logger.info(session.get("user_id"))
+        app.logger.info(request.headers.get("Cookie"))
+
         if "user_id" in session:
             banned = User.query.get(session["user_id"]).banned
             if banned:
