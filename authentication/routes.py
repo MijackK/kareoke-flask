@@ -239,28 +239,11 @@ def get_users():
 @authentication.route("/check", methods=["GET", "POST"])
 @login_required
 def check():
-    info = (
-        User.query.outerjoin(TokenVerification, TokenVerification.email == User.email)
-        .with_entities(
-            User.username.label("username"),
-            User.email.label("email"),
-            User.verify.label("verify"),
-            User.admin.label("admin"),
-            TokenVerification.used.label("used"),
-        )
-        .filter(
-            or_(TokenVerification.type == "email", TokenVerification.type == None),
-            User.id == session["user_id"],
-        )
-        .order_by(TokenVerification.date_created.desc())
-        .first()
-    )
-
+    user = User.query.get(session["user_id"])
     return {
-        "userName": info.username,
-        "email": info.email,
-        "verified": info.verify,
-        "admin": info.admin,
+        "userName": user.username,
+        "email": user.email,
+        "verified": user.verify,
+        "admin": user.admin,
         "csrfToken": session["csrf_token"],
-        "used": info.used if info.used is not None else True,
     }
