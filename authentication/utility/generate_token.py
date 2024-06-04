@@ -45,12 +45,13 @@ def verify_token(value, type):
         .order_by(TokenVerification.date_created.desc())
         .first()
     )
-    is_valid = token.is_valid()
-    if token is None or not is_valid:
-        abort(404, description="verify token is invalid")
+    is_valid = False
+    if token:
+        is_valid = token.is_valid()
+    if not is_valid:
+        abort(404, description="verify token is expired or used")
 
-    if is_valid:
-        token.used = True
-        db.session.add(token)
+    token.used = True
+    db.session.add(token)
 
     return token.email
