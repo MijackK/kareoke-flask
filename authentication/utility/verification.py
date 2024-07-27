@@ -2,10 +2,23 @@ import re
 
 
 def verify_password(password):
-    password_pattern = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$"
-    valid = re.match(password_pattern, password)
-    if valid is None:
+    if len(password) < 8:
         return False
+
+    has_digit = False
+    has_uppercase = False
+
+    for char in password:
+        if char.isdigit():
+            has_digit = True
+        elif char.isupper():
+            has_uppercase = True
+        if has_digit and has_uppercase:
+            break
+
+    if not has_digit or not has_uppercase:
+        return False
+
     return True
 
 

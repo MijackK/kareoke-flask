@@ -16,17 +16,13 @@ def generate_token(email, type):
     user = User.query.filter(User.email == email).first()
     if not user:
         abort(404)
-    recent_token = (
-        TokenVerification.query.filter(
-            TokenVerification.email == email,
-            TokenVerification.used == False,
-            TokenVerification.type == type,
-        )
-        .order_by(TokenVerification.date_created.desc())
-        .first()
-    )
-    if recent_token:
-        recent_token.used = True
+    tokens = TokenVerification.query.filter(
+        TokenVerification.email == email,
+        TokenVerification.used == False,
+        TokenVerification.type == type,
+    ).order_by(TokenVerification.date_created.desc())
+    for token in tokens:
+        token.used = True
 
     url_token = secrets.token_urlsafe()
     db.session.add(TokenVerification(token=url_token, email=email, type=type))
@@ -36,20 +32,16 @@ def generate_token(email, type):
 
 
 def verify_token(value, type):
-    token = (
-        TokenVerification.query.filter(
-            TokenVerification.token == value,
-            TokenVerification.used == False,
-            TokenVerification.type == type,
-        )
-        .order_by(TokenVerification.date_created.desc())
-        .first()
-    )
+    token = TokenVerification.query.filter(
+        TokenVerification.token == value,
+        TokenVerification.type == type,
+    ).first()
+
     is_valid = False
     if token:
         is_valid = token.is_valid()
     if not is_valid:
-        abort(404, description="verify token is expired or used")
+        abort(404, description="Token is expired or used")
 
     token.used = True
     db.session.add(token)

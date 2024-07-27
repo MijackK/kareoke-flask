@@ -8,7 +8,7 @@ from flask import (
     render_template,
 )
 import os
-from authentication.models import User, TokenVerification
+from authentication.models import User
 from app import db, limiter
 from werkzeug.security import check_password_hash, generate_password_hash
 from authentication.decorator import login_required, require_admin
@@ -19,7 +19,7 @@ from authentication.utility.generate_token import (
 )
 from authentication.utility.email import send_mail
 from authentication.utility.verification import verify_password, email_verification
-from sqlalchemy import or_
+
 
 authentication = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -63,7 +63,7 @@ def create_account():
     if not verify_password(post_data["password"]):
         abort(
             400,
-            "password must have, more that 8 characters, atleast one uppercase letter, lowercase letter, number and special character",
+            "Password must have, more that 8 characters, atleast one number, and atleast one uppercase letter",
         )
 
     # add some validation here for password and email?
@@ -150,9 +150,9 @@ def new_reset_token():
 
 @authentication.route("/recover_password", methods=["POST"])
 def password_recovery():
-    user_email = verify_token(value=request.form["token"], type="password")
     if not verify_password(request.form["password"]):
         abort(400, "password not strong enough")
+    user_email = verify_token(value=request.form["token"], type="password")
     user = User.query.filter(User.email == user_email).first()
     user.password = generate_password_hash(request.form["password"])
     db.session.add(user)

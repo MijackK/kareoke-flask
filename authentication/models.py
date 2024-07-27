@@ -39,8 +39,9 @@ class TokenVerification(db.Model):
         # change it so we get the hours limit from the config
         if hours < 24 and not self.used:
             return True
-        self.used = True
-        db.session.commit()
+        if not self.used:
+            self.used = True
+            db.session.commit()
         return False
 
 
