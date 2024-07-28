@@ -37,11 +37,11 @@ def verify_token(value, type):
         TokenVerification.type == type,
     ).first()
 
-    is_valid = False
     if token:
-        is_valid = token.is_valid()
-    if not is_valid:
-        abort(404, description="Token is expired or used")
+        if token.used:
+            abort(403, description="Token has already been used")
+        if not token.is_valid():
+            abort(403, description="Token has expired")
 
     token.used = True
     db.session.add(token)
