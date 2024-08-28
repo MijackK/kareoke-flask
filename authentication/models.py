@@ -22,8 +22,8 @@ class TokenVerification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(60))
     token = db.Column(db.String)
-    date_created = db.Column(db.DateTime, default=datetime.now())
-    date_updated = db.Column(db.DateTime, onupdate=func.now())
+    date_created = db.Column(db.DateTime, default=datetime.now)
+    date_updated = db.Column(db.DateTime, onupdate=datetime.now)
     used = db.Column(db.Boolean, default=False)
     type = db.Column(db.String(60))
 
@@ -51,7 +51,7 @@ class AccessControl(db.Model):
         db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), index=True
     )
     permission = db.Column(db.String)
-    date_created = db.Column(db.DateTime, default=datetime.now())
+    date_created = db.Column(db.DateTime, default=datetime.now)
 
     def __init__(self, user, permission):
         self.user = user
@@ -65,7 +65,7 @@ class Notifications(db.Model):
     user = db.Column(
         db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), index=True
     )
-    date_created = db.Column(db.DateTime, default=datetime.now())
+    date_created = db.Column(db.DateTime, default=datetime.now)
 
     def __init__(self, user, message):
         self.user = user
