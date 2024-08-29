@@ -9,8 +9,8 @@ class BeatMap(db.Model):
     beatMap = db.Column(db.String)
     user = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
     status = db.Column(db.String)
-    date_created = db.Column(db.DateTime, default=datetime.now)
-    date_updated = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    date_created = db.Column(db.DateTime, default=func.now())
+    date_updated = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
 
     def __init__(self, name, beatMap, user, status="draft"):
         self.name = name
@@ -26,7 +26,7 @@ class Media(db.Model):
     beatMap = db.Column(
         db.Integer, db.ForeignKey("beat_map.id", ondelete="CASCADE"), index=True
     )
-    date_created = db.Column(db.DateTime, default=datetime.now)
+    date_created = db.Column(db.DateTime, default=func.now())
     type = db.Column(db.String)
 
     def __init__(self, beatMap, objectID, size, type):
@@ -45,8 +45,8 @@ class HighScore(db.Model):
         db.Integer, db.ForeignKey("beat_map.id", ondelete="CASCADE"), index=True
     )
     score = db.Column(db.Integer)
-    date_created = db.Column(db.DateTime, default=)
-    date_updated = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    date_created = db.Column(db.DateTime, default=func.now())
+    date_updated = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
 
     def __init__(self, beatMap, score, user):
         self.beatMap = beatMap
