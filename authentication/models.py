@@ -33,7 +33,7 @@ class TokenVerification(db.Model):
         self.type = type
 
     def is_valid(self):
-        current_time = func.now()()
+        current_time = datetime.now()
         delta = current_time - self.date_created
         hours = delta.total_seconds() / 3600
         # change it so we get the hours limit from the config
